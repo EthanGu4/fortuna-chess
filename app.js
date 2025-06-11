@@ -1,7 +1,11 @@
+const modeSelection = document.getElementById('mode-selection');
+const container = document.getElementById('container');
 const gameBoard = document.querySelector('#gameboard')
-const playerDisplay = document.querySelector('#player')
 const infoDisplay = document.querySelector('#info-display')
-const width = 8
+const playerDisplay = document.querySelector('#player')
+const restartBtn = document.getElementById('restart-btn');
+
+let width
 let playerTurn = "white"
 let gameOver = false
 let castlingMove = null
@@ -30,7 +34,44 @@ let hasMoved = {
     blackRookH: false
 }
 
-function createBoard() {
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.mode-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const mode = button.dataset.set;
+            startGameWithMode(mode);
+        });
+    });
+
+    restartBtn.addEventListener('click', restartGame);
+});
+
+function startGameWithMode(mode) {
+
+    modeSelection.style.display = 'none';
+    container.style.display = 'block';
+    document.body.classList.remove('classic-mode', 'fantasy-mode');
+
+    gameBoard.innerHTML = '';
+    infoDisplay.textContent = '';
+    playerDisplay.textContent = 'white';
+
+    if (mode === 'classic') {
+        width = 8;
+        document.body.classList.remove('fantasy-mode');
+        document.body.classList.add('classic-mode');
+
+        createClassicBoard();
+
+    } else if (mode == 'fantasy') {
+        width = 8;
+        document.body.classList.remove('classic-mode');
+        document.body.classList.add('fantasy-mode');
+
+        createFantasyBoard();
+    }
+}
+function createClassicBoard() {
 
     const startPieces = [
         rook, knight, bishop, queen, king, bishop, knight, rook,
@@ -73,8 +114,47 @@ function createBoard() {
     }
 }
 
-createBoard()
+function createFantasyBoard() {
+    const startPieces = [
+        frog, knight, bishop, queen, king, bishop, knight, rook,
+        pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+        rook, knight, bishop, queen, king, bishop, knight, rook
+    ]
 
+    startPieces.forEach((startPiece, i) => {
+        const square = document.createElement('div')
+        square.classList.add('square')
+        square.innerHTML = startPiece
+        square.firstChild?.setAttribute('draggable', true) 
+        square.setAttribute('square-id', i)
+        const row = Math.floor( (63 - i) / 8) + 1
+        
+        if (row % 2 === 0) {
+            square.classList.add(i % 2 === 0 ? "light" : "dark")
+        } else {
+            square.classList.add(i % 2 === 0 ? "dark" : "light")
+        }
+        if (i <= 15) {
+            if (square.firstChild) square.firstChild.classList.add('black')
+        }
+
+        if (i >= 48) {
+            if (square.firstChild) square.firstChild.classList.add('white')
+        }
+        gameBoard.appendChild(square)
+    })
+
+    squareFunctionality()
+
+    if (playerTurn === 'white') {
+        reverseIds()
+    }
+}
 
 function squareFunctionality() {
     const allSquares = document.querySelectorAll(".square")
@@ -153,8 +233,8 @@ function dragDrop(e) {
 
     if (draggedElement.id === 'rook') {
         const from = Number(startPositionId)
-        if (from % 8 === 0) hasMoved[`${playerTurn}RookA`] = true
-        if (from % 8 === 7) hasMoved[`${playerTurn}RookH`] = true
+        if (from % width === 0) hasMoved[`${playerTurn}RookA`] = true
+        if (from % width === width - 1) hasMoved[`${playerTurn}RookH`] = true
     }
 
     if (castlingMove) {
@@ -737,7 +817,7 @@ function checkGameStatus() {
 
     if (isKingInCheck(playerTurn)) {
         if (!hasAnyLegalMoves(playerTurn)) {
-            endGame(`${playerTurn} is in checkmate! Game over.`)
+            endGame(`${playerTurn} is in checkmate! game over.`)
         } else {
             infoDisplay.textContent = `${playerTurn} is in check!`
         }
@@ -751,13 +831,26 @@ function checkGameStatus() {
 }
 
 function restartGame() {
-    gameBoard.innerHTML = ''
-    infoDisplay.textContent = ''
-    playerTurn = 'white'
-    gameOver = false
-    castlingMove = null
-    lastMove = { from: null, to: null }
-    playerDisplay.textContent = playerTurn
+
+    container.style.display = 'none';
+    modeSelection.style.display = 'flex';
+
+    gameBoard.innerHTML = '';
+    infoDisplay.textContent = '';
+    playerDisplay.textContent = '';
+
+    playerTurn = 'white';
+    gameOver = false;
+    castlingMove = null;
+    lastMove = { from: null, to: null };
+
+    // gameBoard.innerHTML = ''
+    // infoDisplay.textContent = ''
+    // playerTurn = 'white'
+    // gameOver = false
+    // castlingMove = null
+    // lastMove = { from: null, to: null }
+    // playerDisplay.textContent = playerTurn
 
     if (typeof hasMoved !== 'undefined') {
         hasMoved = {
@@ -769,8 +862,6 @@ function restartGame() {
             blackRookH: false
         }
     }
-
-    createBoard();
 }
 
 function flashInvalid(square) {
@@ -778,9 +869,6 @@ function flashInvalid(square) {
     void square.offsetWidth; // Force reflow
     square.classList.add('invalid-move');
 }
-
-const restartBtn = document.getElementById('restart-btn');
-restartBtn.addEventListener('click', restartGame);
 
 const music = document.getElementById('background-music')
 

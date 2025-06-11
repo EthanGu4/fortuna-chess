@@ -6,11 +6,20 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
+
+    <div class="stars"></div>
+    <div class="shooting-stars"></div>
+
+    <div id="mode-selection">
+        <h2>Select Game Mode</h2>
+        <button class="mode-btn" data-set="classic">Classic Mode</button>
+        <button class="mode-btn" data-set="fantasy">Fantasy Mode</button>
+    </div>
+
     <div id="container">
 
         <div id="gameboard"></div>
-        <p>It is <span id="player"></span>'s turn</p>
+        <p id="player-display">It is <span id="player"></span>'s turn</p>
         <p id="info-display"></p>
         <button id="restart-btn">Restart Game</button>
 

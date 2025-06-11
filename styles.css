@@ -77,14 +77,92 @@ body.fantasy-mode {
   overflow: hidden;
 }
 
-/* body.fantasy-mode .square.light {
-  background-color: #3e2c54;
-  background-image: radial-gradient(circle at center, #6b4fa3 10%, transparent 80%);
+body.fantasy-mode,
+body.fantasy-mode * {
+  cursor: url('data:image/svg+xml;charset=utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="48" width="48"><g transform="translate(64,0) scale(-1,1)"><text y="28" font-size="32">🪄</text></g></svg>'), auto !important;
 }
-body.fantasy-mode .square.dark {
-  background-color: #1c102f; 
-  background-image: radial-gradient(circle at center, #301c51 10%, transparent 80%);
-} */
+
+.sparkle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 1;
+  z-index: 9999;
+
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+  box-shadow: 0 0 10px 2px currentColor;
+  
+  animation-name: sparkleFadeMove;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes sparkleFadeMove {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--move-x), var(--move-y)) scale(2.5);
+  }
+}
+
+.fantasy-mode .square.light {
+  background-color: #4a2b7f; /* rich purple base */
+  background-image:
+    radial-gradient(circle at center, #b583ff 10%, transparent 60%),
+    radial-gradient(circle at 30% 30%, rgba(255, 200, 255, 0.4) 10%, transparent 70%),
+    radial-gradient(circle at 70% 70%, rgba(200, 255, 255, 0.3) 10%, transparent 70%);
+  box-shadow:
+    0 0 18px 4px rgba(255, 200, 255, 0.6),
+    inset 0 0 12px 4px rgba(150, 100, 255, 0.5);
+  animation: sparkleLight 4s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.fantasy-mode .square.dark {
+  background-color: #1e0f3f; /* deeper indigo */
+  background-image:
+    radial-gradient(circle at center, #7f4dbd 15%, transparent 60%),
+    radial-gradient(circle at 70% 30%, rgba(255, 255, 180, 0.2) 10%, transparent 70%),
+    radial-gradient(circle at 30% 70%, rgba(180, 255, 255, 0.2) 10%, transparent 70%);
+  box-shadow:
+    0 0 22px 6px rgba(180, 100, 255, 0.7),
+    inset 0 0 14px 4px rgba(100, 0, 180, 0.4);
+  animation: sparkleDark 5s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes sparkleLight {
+  0%, 100% {
+    filter: brightness(1) saturate(1.2);
+  }
+  50% {
+    filter: brightness(1.4) saturate(1.5) hue-rotate(20deg);
+  }
+}
+
+@keyframes sparkleDark {
+  0%, 100% {
+    filter: brightness(0.9) saturate(1.2);
+  }
+  50% {
+    filter: brightness(1.3) saturate(1.6) hue-rotate(-20deg);
+  }
+}
+
+.fantasy-mode .square.last-move-from {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 2;
+}
+
+.fantasy-mode .square.last-move-to {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 2;
+}
 
 /* body.fantasy-mode .square img {
   width: 80%;
@@ -223,12 +301,12 @@ body::before {
   z-index: 1;
 }
 
-.square.light {
+.classic-mode .square.light {
   background: linear-gradient(135deg, #f0d9b5, #e6c89f);
   box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
 }
 
-.square.dark {
+.classic-mode .square.dark {
   background: linear-gradient(135deg, #b58863, #8b5a2b);
   box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
 }
@@ -248,7 +326,7 @@ path {
 
 .piece {
   position: relative;
-  z-index: 2;
+  z-index: 9;
 }
 
 .piece:hover {
@@ -278,22 +356,14 @@ path {
     fill: #eee8d5;
 }
 
-.square.last-move-from::after,
-.square.last-move-to::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 3;
+.classic-mode .square.last-move-from {
+  box-shadow: 0 0 12px 6px rgba(255, 140, 0, 0.9);
+  z-index: 2;
 }
 
-.square.last-move-from {
-  box-shadow: 0 0 12px 6px rgba(255, 140, 0, 0.9); /* deeper orange */
-}
-
-.square.last-move-to {
-  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1); /* bright gold */
+.classic-mode .square.last-move-to {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 2;
 }
 
 @keyframes flash-shake-glow {

@@ -34,6 +34,56 @@ let hasMoved = {
     blackRookH: false
 }
 
+let sparklesEnabled = true;
+
+// sparkle cursor!!
+document.addEventListener('mousemove', (e) => {
+  if (!document.body.classList.contains('fantasy-mode')) return;
+  if (!sparklesEnabled) return;
+
+  const colors = [
+    '#ff3b3b', // red
+    '#ff883b', // orange
+    '#fff53b', // yellow
+    '#3bff57', // green
+    '#3b8bff', // blue
+    '#8b3bff', // indigo
+    '#ff3bff', // violet
+  ];
+
+  const sparkle = document.createElement('div');
+  sparkle.classList.add('sparkle');
+  sparkle.style.left = `${e.clientX}px`;
+  sparkle.style.top = `${e.clientY}px`;
+
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  sparkle.style.color = color;
+
+  sparkle.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
+
+  const size = 4 + Math.random() * 4;
+  sparkle.style.width = `${size}px`;
+  sparkle.style.height = `${size}px`;
+
+  const duration = 0.5 + Math.random() * 0.3;
+  sparkle.style.animationDuration = `${duration}s`;
+
+  const moveX = (Math.random() - 0.5) * 30 + 'px';
+  const moveY = (Math.random() - 0.5) * 30 + 'px';
+  sparkle.style.setProperty('--move-x', moveX);
+  sparkle.style.setProperty('--move-y', moveY);
+
+  document.body.appendChild(sparkle);
+
+  setTimeout(() => sparkle.remove(), duration * 1000);
+});
+
+// hotkey s for starting sparkles
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 's') {
+    sparklesEnabled = !sparklesEnabled;
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.mode-btn').forEach(button => {
@@ -844,13 +894,8 @@ function restartGame() {
     castlingMove = null;
     lastMove = { from: null, to: null };
 
-    // gameBoard.innerHTML = ''
-    // infoDisplay.textContent = ''
-    // playerTurn = 'white'
-    // gameOver = false
-    // castlingMove = null
-    // lastMove = { from: null, to: null }
-    // playerDisplay.textContent = playerTurn
+    document.body.classList.remove('classic-mode', 'fantasy-mode');
+
 
     if (typeof hasMoved !== 'undefined') {
         hasMoved = {
@@ -876,3 +921,10 @@ window.addEventListener('click', () => {
     music.volume = 0.3
     music.play()
 }, { once: true })
+
+// hotkey m to mute music
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'm') {
+    music.muted = !music.muted;
+  }
+});

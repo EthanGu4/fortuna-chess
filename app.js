@@ -1,6 +1,7 @@
 const modeSelection = document.getElementById('mode-selection');
 const container = document.getElementById('container');
-const gameBoard = document.querySelector('#gameboard')
+const gameBoardClassic = document.querySelector('#classic-gameboard')
+const gameBoardFantasy = document.querySelector('#fantasy-gameboard')
 const infoDisplay = document.querySelector('#info-display')
 const playerDisplay = document.querySelector('#player')
 const restartBtn = document.getElementById('restart-btn');
@@ -34,57 +35,6 @@ let hasMoved = {
     blackRookH: false
 }
 
-let sparklesEnabled = true;
-
-// sparkle cursor!!
-document.addEventListener('mousemove', (e) => {
-  if (!document.body.classList.contains('fantasy-mode')) return;
-  if (!sparklesEnabled) return;
-
-  const colors = [
-    '#ff3b3b', // red
-    '#ff883b', // orange
-    '#fff53b', // yellow
-    '#3bff57', // green
-    '#3b8bff', // blue
-    '#8b3bff', // indigo
-    '#ff3bff', // violet
-  ];
-
-  const sparkle = document.createElement('div');
-  sparkle.classList.add('sparkle');
-  sparkle.style.left = `${e.clientX}px`;
-  sparkle.style.top = `${e.clientY}px`;
-
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  sparkle.style.color = color;
-
-  sparkle.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
-
-  const size = 4 + Math.random() * 4;
-  sparkle.style.width = `${size}px`;
-  sparkle.style.height = `${size}px`;
-
-  const duration = 0.5 + Math.random() * 0.3;
-  sparkle.style.animationDuration = `${duration}s`;
-
-  const moveX = (Math.random() - 0.5) * 30 + 'px';
-  const moveY = (Math.random() - 0.5) * 30 + 'px';
-  sparkle.style.setProperty('--move-x', moveX);
-  sparkle.style.setProperty('--move-y', moveY);
-
-  document.body.appendChild(sparkle);
-
-  setTimeout(() => sparkle.remove(), duration * 1000);
-});
-
-// hotkey s for starting sparkles
-document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 's') {
-    sparklesEnabled = !sparklesEnabled;
-  }
-});
-
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.mode-btn').forEach(button => {
         button.addEventListener('click', () => {
@@ -102,19 +52,28 @@ function startGameWithMode(mode) {
     container.style.display = 'block';
     document.body.classList.remove('classic-mode', 'fantasy-mode');
 
-    gameBoard.innerHTML = '';
+    gameBoardClassic.innerHTML = '';
+    gameBoardFantasy.innerHTML = '';
     infoDisplay.textContent = '';
     playerDisplay.textContent = 'white';
 
     if (mode === 'classic') {
         width = 8;
+
+        document.querySelector('#fantasy-gameboard').classList.add('hidden');
+        document.querySelector('#classic-gameboard').classList.remove('hidden');
+
         document.body.classList.remove('fantasy-mode');
         document.body.classList.add('classic-mode');
 
         createClassicBoard();
 
     } else if (mode == 'fantasy') {
-        width = 8;
+        width = 12;
+
+        document.querySelector('#classic-gameboard').classList.add('hidden');
+        document.querySelector('#fantasy-gameboard').classList.remove('hidden');
+
         document.body.classList.remove('classic-mode');
         document.body.classList.add('fantasy-mode');
 
@@ -154,7 +113,7 @@ function createClassicBoard() {
         if (i >= 48) {
             if (square.firstChild) square.firstChild.classList.add('white')
         }
-        gameBoard.appendChild(square)
+        gameBoardClassic.appendChild(square)
     })
 
     squareFunctionality()
@@ -165,38 +124,75 @@ function createClassicBoard() {
 }
 
 function createFantasyBoard() {
+    
+    // const waterSquares = [39, 40, 43, 44, 64, 65, 66, 67, 76, 77, 78, 79, 99, 100, 103, 104];
+
+    // random approach for water squares
+    const min = 35;
+    const max = 107;
+    const waterCount = 12;
+    const excludedSquares = [49, 58, 85, 94]; // example squares to exclude
+
+    function getRandomWaterSquares(count, min, max, excluded) {
+        const validSquares = [];
+        for (let i = min; i <= max; i++) {
+            if (!excluded.includes(i)) {
+            validSquares.push(i);
+            }
+        }
+
+        const result = new Set();
+        while (result.size < count && result.size < validSquares.length) {
+            const randIndex = Math.floor(Math.random() * validSquares.length);
+            result.add(validSquares[randIndex]);
+        }
+
+        return Array.from(result);
+    }
+
+    const waterSquares = getRandomWaterSquares(waterCount, min, max, excludedSquares);
+
     const startPieces = [
-        frog, knight, bishop, queen, king, bishop, knight, rook,
-        pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
-        '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '',
-        pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
-        rook, knight, bishop, queen, king, bishop, knight, rook
+        umbrella, rocket, dragon, staffSnake, wizard, tornado, bomb, guitar, pope, bishop, knight, rook,
+        pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp,
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', frog, '', '', '', '', '', '', '', '', frog, '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', frog, '', '', '', '', '', '', '', '', frog, '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        shrimp, pawn, shrimp, pawn, shrimp, pawn, whale, pawn, shrimp, pawn, shrimp, pawn,
+        umbrella, otter, dragon, khanda, tornado, jedi, bishop, queen, pope, fish, knight, umbrella
     ]
 
     startPieces.forEach((startPiece, i) => {
         const square = document.createElement('div')
         square.classList.add('square')
+
+        if (waterSquares.includes(i)) {
+            square.classList.add('water');
+        }
+
         square.innerHTML = startPiece
         square.firstChild?.setAttribute('draggable', true) 
         square.setAttribute('square-id', i)
-        const row = Math.floor( (63 - i) / 8) + 1
+        const row = Math.floor(((width * width - 1) - i) / width) + 1
         
         if (row % 2 === 0) {
             square.classList.add(i % 2 === 0 ? "light" : "dark")
         } else {
             square.classList.add(i % 2 === 0 ? "dark" : "light")
         }
-        if (i <= 15) {
+        if (i <= (width * width) / 2 - 1) {
             if (square.firstChild) square.firstChild.classList.add('black')
         }
 
-        if (i >= 48) {
+        if (i >= (width * width) / 2) {
             if (square.firstChild) square.firstChild.classList.add('white')
         }
-        gameBoard.appendChild(square)
+        gameBoardFantasy.appendChild(square)
     })
 
     squareFunctionality()
@@ -258,10 +254,35 @@ function dragDrop(e) {
     }
 
     const captured = toSquare.querySelector('.piece');
+    const fantasyCaptured = toSquare.querySelector('.fantasy-piece');
 
     fromSquare.removeChild(draggedElement);
-    if (captured) toSquare.removeChild(captured);
-    toSquare.appendChild(draggedElement);
+
+    if (captured) {
+        toSquare.removeChild(captured);
+        toSquare.appendChild(draggedElement);
+
+    } else if (fantasyCaptured) {
+
+        fantasyCaptured.classList.add('captured')
+
+        document.querySelectorAll('.fantasy-piece').forEach(p => {
+            p.style.pointerEvents = 'none';
+        });
+
+        setTimeout(() => {
+            toSquare.removeChild(fantasyCaptured);
+            toSquare.appendChild(draggedElement);
+
+            document.querySelectorAll('.fantasy-piece').forEach(p => {
+                p.style.pointerEvents = '';
+            });
+
+        }, 550);
+
+    } else {
+        toSquare.appendChild(draggedElement);
+    }
 
     const stillInCheck = isKingInCheck(playerTurn);
     
@@ -273,7 +294,7 @@ function dragDrop(e) {
         return;
     }
 
-    if (pieceType === 'pawn' && endRow === 7) {
+    if (pieceType === 'pawn' && endRow === width - 1) {
         handlePawnPromotion(toSquare, playerTurn)
     }
 
@@ -313,7 +334,16 @@ function checkIfValid(piece, from, to) {
     const startId = Number(from.getAttribute('square-id'))
     const targetId = Number(to.getAttribute('square-id'))
 
+    if (isWaterSquare(to) && !isFantasyPiece(piece)) {
+        return false;
+    }
+    if (isWaterSquare(to) && isFantasyPiece(piece) && !canWalkOnWater(piece)) {
+        return false;
+    }
+
     switch(pieceType) {
+        
+        case 'shrimp':
         case 'pawn':
             const startRow = [8, 9, 10, 11, 12, 13, 14, 15];
             const startCol = getCol(startId);
@@ -350,8 +380,8 @@ function checkIfValid(piece, from, to) {
             ) {
                 return true;
             }
-            break;
 
+            break;
         
         case 'knight':
             const knightMoves = [
@@ -386,6 +416,7 @@ function checkIfValid(piece, from, to) {
                 }
                 
             }
+
             break;
 
         // case 'knight':
@@ -443,50 +474,6 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
-        
-        // case 'bishop':
-        //     if (
-        //         startId + width + 1 === targetId ||
-        //         startId + width * 2 + 2 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild ||
-        //         startId + width * 3 + 3 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 + 2}"]`).firstChild ||
-        //         startId + width * 4 + 4 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 + 3}"]`).firstChild ||
-        //         startId + width * 5 + 5 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 + 4}"]`).firstChild ||
-        //         startId + width * 6 + 6 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 + 4}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 5 + 5}"]`).firstChild ||
-        //         startId + width * 7 + 7 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 + 4}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 5 + 5}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 6 + 6}"]`).firstChild ||
-                
-        //         // 2nd diagonal
-
-        //         startId - width - 1 === targetId ||
-        //         startId - width * 2 - 2 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild ||
-        //         startId - width * 3 - 3 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 - 2}"]`).firstChild ||
-        //         startId - width * 4 - 4 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 - 3}"]`).firstChild ||
-        //         startId - width * 5 - 5 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 - 4}"]`).firstChild ||
-        //         startId - width * 6 - 6 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 - 4}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 5 - 5}"]`).firstChild ||
-        //         startId - width * 7 - 7 === targetId && !document.querySelector(`[square-id="${startId - width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 - 4}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 5 - 5}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 6 - 6}"]`).firstChild ||
-                
-        //         // 3rd diagonal
-
-        //         startId + width - 1 === targetId ||
-        //         startId + width * 2 - 2 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild ||
-        //         startId + width * 3 - 3 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 - 2}"]`).firstChild ||
-        //         startId + width * 4 - 4 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 - 3}"]`).firstChild ||
-        //         startId + width * 5 - 5 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 - 4}"]`).firstChild ||
-        //         startId + width * 6 - 6 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 - 4}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 5 - 5}"]`).firstChild ||
-        //         startId + width * 7 - 7 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2 - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3 - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4 - 4}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 5 - 5}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 6 - 6}"]`).firstChild ||
-
-        //         // 4th diagonal
-
-        //         startId - width + 1 === targetId ||
-        //         startId - width * 2 + 2 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild ||
-        //         startId - width * 3 + 3 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 + 2}"]`).firstChild ||
-        //         startId - width * 4 + 4 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 + 3}"]`).firstChild ||
-        //         startId - width * 5 + 5 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 + 4}"]`).firstChild ||
-        //         startId - width * 6 + 6 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 + 4}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 5 + 5}"]`).firstChild ||
-        //         startId - width * 7 + 7 === targetId && !document.querySelector(`[square-id="${startId - width + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2 + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3 + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4 + 4}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 5 + 5}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 6 + 6}"]`).firstChild
-        //     ) {
-        //         return true
-        //     }
-        //     break;
 
         case 'rook':
             const rookMoves = [
@@ -527,44 +514,6 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
-                
-        // case 'rook':
-        //     if (
-        //         startId + width === targetId ||
-        //         startId + width * 2 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild ||
-        //         startId + width * 3 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild ||
-        //         startId + width * 4 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3}"]`).firstChild ||
-        //         startId + width * 5 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4}"]`).firstChild ||
-        //         startId + width * 6 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId + width * 5}"]`).firstChild ||
-        //         startId + width * 7 === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId + width * 5}"]`).firstChild && !document.querySelector(`[square-id="${startId + width * 6}"]`).firstChild ||
-                
-        //         startId - width === targetId ||
-        //         startId - width * 2 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild ||
-        //         startId - width * 3 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2}"]`).firstChild ||
-        //         startId - width * 4 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3}"]`).firstChild ||
-        //         startId - width * 5 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4}"]`).firstChild ||
-        //         startId - width * 6 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId - width * 5}"]`).firstChild ||
-        //         startId - width * 7 === targetId && !document.querySelector(`[square-id="${startId - width}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId - width * 5}"]`).firstChild && !document.querySelector(`[square-id="${startId - width * 6}"]`).firstChild ||
-            
-        //         startId + 1 === targetId ||
-        //         startId + 2 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild ||
-        //         startId + 3 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + 2}"]`).firstChild ||
-        //         startId + 4 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + 3}"]`).firstChild ||
-        //         startId + 5 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + 4}"]`).firstChild ||
-        //         startId + 6 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId + 5}"]`).firstChild ||
-        //         startId + 7 === targetId && !document.querySelector(`[square-id="${startId + 1}"]`).firstChild && !document.querySelector(`[square-id="${startId + 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + 3}"]`).firstChild && !document.querySelector(`[square-id="${startId + 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId + 5}"]`).firstChild && !document.querySelector(`[square-id="${startId + 6}"]`).firstChild ||
-            
-        //         startId - 1 === targetId ||
-        //         startId - 2 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild ||
-        //         startId - 3 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - 2}"]`).firstChild ||
-        //         startId - 4 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - 3}"]`).firstChild ||
-        //         startId - 5 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - 4}"]`).firstChild ||
-        //         startId - 6 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId - 5}"]`).firstChild ||
-        //         startId - 7 === targetId && !document.querySelector(`[square-id="${startId - 1}"]`).firstChild && !document.querySelector(`[square-id="${startId - 2}"]`).firstChild && !document.querySelector(`[square-id="${startId - 3}"]`).firstChild && !document.querySelector(`[square-id="${startId - 4}"]`).firstChild  && !document.querySelector(`[square-id="${startId - 5}"]`).firstChild && !document.querySelector(`[square-id="${startId - 6}"]`).firstChild
-        //     ) {
-        //         return true
-        //     }
-        //     break;
 
         case 'queen':
             let queenMoves = [
@@ -651,37 +600,14 @@ function checkIfValid(piece, from, to) {
                 }
             }
 
+            break;
+        
+        // FANTASY CASES
 
-        // case 'king':
-        //     const kingMoves = [
-        //         [-1, -1], [-1, 0], [-1, 1],
-        //         [0, -1],           [0, 1],
-        //         [1, -1],  [1, 0],  [1, 1]
-        //     ];
+        // case 'shrimp':
 
-        //     const startKingRow = getRow(startId);
-        //     const startKingCol = getCol(startId);
 
-        //     for (const [rowDirection, colDirection] of kingMoves) {
-        //         const row = startKingRow + rowDirection;
-        //         const col = startKingCol + colDirection;
 
-        //         if (row < 0 || row >= width || col < 0 || col >= width) {
-        //             continue;
-        //         }
-
-        //         const target = row * width + col;
-
-        //         if (target === targetId) {
-
-        //             const square = document.querySelector(`[square-id="${target}"]`);
-        //             const piece = square.firstChild;
-
-        //             if (!piece || !piece.classList.contains(pieceColor)) {
-        //                 return true;
-        //             }
-        //         }
-        //     }
 
     }
 }
@@ -850,6 +776,19 @@ function hasAnyLegalMoves(playerColor) {
     return false
 }
 
+// Fantasy piece specific code starts here
+function isFantasyPiece(piece) {
+  return piece.classList.contains('fantasy-piece');
+}
+
+function isWaterSquare(square) {
+  return square.classList.contains('water');
+}
+
+function canWalkOnWater(piece) {
+  return piece.dataset.waterWalking === 'true';
+}
+
 function endGame(message) {
     gameOver = true
     infoDisplay.textContent = message
@@ -885,7 +824,8 @@ function restartGame() {
     container.style.display = 'none';
     modeSelection.style.display = 'flex';
 
-    gameBoard.innerHTML = '';
+    gameBoardClassic.innerHTML = '';
+    gameBoardFantasy.innerHTML = '';
     infoDisplay.textContent = '';
     playerDisplay.textContent = '';
 
@@ -926,5 +866,62 @@ window.addEventListener('click', () => {
 window.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'm') {
     music.muted = !music.muted;
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'w') {
+    document.body.classList.toggle('cursor-reset');
+  }
+});
+
+let sparklesEnabled = false;
+
+// sparkle cursor!!
+document.addEventListener('mousemove', (e) => {
+  if (!document.body.classList.contains('fantasy-mode')) return;
+  if (!sparklesEnabled) return;
+
+  const colors = [
+    '#ff3b3b', // red
+    '#ff883b', // orange
+    '#fff53b', // yellow
+    '#3bff57', // green
+    '#3b8bff', // blue
+    '#8b3bff', // indigo
+    '#ff3bff', // violet
+  ];
+
+  const sparkle = document.createElement('div');
+  sparkle.classList.add('sparkle');
+  sparkle.style.left = `${e.clientX}px`;
+  sparkle.style.top = `${e.clientY}px`;
+
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  sparkle.style.color = color;
+
+  sparkle.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
+
+  const size = 4 + Math.random() * 4;
+  sparkle.style.width = `${size}px`;
+  sparkle.style.height = `${size}px`;
+
+  const duration = 0.5 + Math.random() * 0.3;
+  sparkle.style.animationDuration = `${duration}s`;
+
+  const moveX = (Math.random() - 0.5) * 30 + 'px';
+  const moveY = (Math.random() - 0.5) * 30 + 'px';
+  sparkle.style.setProperty('--move-x', moveX);
+  sparkle.style.setProperty('--move-y', moveY);
+
+  document.body.appendChild(sparkle);
+
+  setTimeout(() => sparkle.remove(), duration * 1000);
+});
+
+// hotkey s for starting sparkles
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 's') {
+    sparklesEnabled = !sparklesEnabled;
   }
 });

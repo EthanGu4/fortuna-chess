@@ -3,7 +3,7 @@
   display: none;
 }
 
-#gameboard {
+#classic-gameboard {
   width: 640px;
   height: 640px;
   display: flex;
@@ -15,9 +15,33 @@
   user-select: none;
 }
 
+#fantasy-gameboard {
+  position: relative;
+  width: 640px;
+  height: 640px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px;
+  border-radius: 12px;
+  user-select: none;
+  background: radial-gradient(circle at center, #4e6374, #2a3a46 70%);
+  box-shadow: 0 0 40px 4px rgba(0, 191, 255, 0.3);
+  animation: glowPulse 4s ease-in-out infinite;
+  overflow: visible;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 40px 4px rgba(0, 191, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 60px 6px rgba(0, 191, 255, 0.5);
+  }
+}
+
 #player {
   font-weight: 700;
-  color: #ffd700; /* gold */
+  color: #ffd700;
 }
 
 #info-display {
@@ -41,6 +65,10 @@
 
 #restart-btn:hover {
   background: #a36e40;
+}
+
+.hidden {
+  display: none !important;
 }
 
 body {
@@ -82,6 +110,11 @@ body.fantasy-mode * {
   cursor: url('data:image/svg+xml;charset=utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="48" width="48"><g transform="translate(64,0) scale(-1,1)"><text y="28" font-size="32">🪄</text></g></svg>'), auto !important;
 }
 
+body.fantasy-mode.cursor-reset,
+body.fantasy-mode.cursor-reset * {
+  cursor: auto !important;
+}
+
 .sparkle {
   position: fixed;
   width: 6px;
@@ -110,30 +143,35 @@ body.fantasy-mode * {
   }
 }
 
-.fantasy-mode .square.light {
-  background-color: #4a2b7f; /* rich purple base */
+#fantasy-gameboard .square.light {
+  background-color: #6a4ca3;
   background-image:
-    radial-gradient(circle at center, #b583ff 10%, transparent 60%),
-    radial-gradient(circle at 30% 30%, rgba(255, 200, 255, 0.4) 10%, transparent 70%),
-    radial-gradient(circle at 70% 70%, rgba(200, 255, 255, 0.3) 10%, transparent 70%);
+    radial-gradient(circle at center, #bfa6ff 15%, transparent 80%);
   box-shadow:
-    0 0 18px 4px rgba(255, 200, 255, 0.6),
-    inset 0 0 12px 4px rgba(150, 100, 255, 0.5);
-  animation: sparkleLight 4s infinite ease-in-out;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+    inset 0 0 8px 2px rgba(190, 160, 255, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.fantasy-mode .square.dark {
-  background-color: #1e0f3f; /* deeper indigo */
+#fantasy-gameboard .square.dark {
+  background-color: #392e6d;
   background-image:
-    radial-gradient(circle at center, #7f4dbd 15%, transparent 60%),
-    radial-gradient(circle at 70% 30%, rgba(255, 255, 180, 0.2) 10%, transparent 70%),
-    radial-gradient(circle at 30% 70%, rgba(180, 255, 255, 0.2) 10%, transparent 70%);
+    radial-gradient(circle at center, #7d6acc 20%, transparent 80%);
   box-shadow:
-    0 0 22px 6px rgba(180, 100, 255, 0.7),
-    inset 0 0 14px 4px rgba(100, 0, 180, 0.4);
-  animation: sparkleDark 5s infinite ease-in-out;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+    inset 0 0 10px 3px rgba(120, 100, 190, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+#fantasy-gameboard .square.water {
+  position: relative;
+  background: linear-gradient(135deg, #005599 0%, #3399ff 60%, #66b2ff 100%);
+  box-shadow:
+    inset 0 0 20px 4px rgba(51, 153, 255, 0.7),
+    0 0 8px 2px rgba(102, 178, 255, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid rgba(102, 178, 255, 0.7);
 }
 
 @keyframes sparkleLight {
@@ -154,12 +192,12 @@ body.fantasy-mode * {
   }
 }
 
-.fantasy-mode .square.last-move-from {
+#fantasy-gameboard .square.last-move-from {
   box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
   z-index: 2;
 }
 
-.fantasy-mode .square.last-move-to {
+#fantasy-gameboard .square.last-move-to {
   box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
   z-index: 2;
 }
@@ -286,7 +324,7 @@ body::before {
   z-index: -1;
 }
 
-.square {
+#classic-gameboard .square {
   width: 80px;
   height: 80px;
   display: flex;
@@ -301,20 +339,43 @@ body::before {
   z-index: 1;
 }
 
-.classic-mode .square.light {
+#fantasy-gameboard .square {
+  width: 53.3333px;
+  height: 53.3333px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+#classic-gameboard .square.light {
   background: linear-gradient(135deg, #f0d9b5, #e6c89f);
   box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
 }
 
-.classic-mode .square.dark {
+#classic-gameboard .square.dark {
   background: linear-gradient(135deg, #b58863, #8b5a2b);
   box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
 }
 
-.square svg {
+#classic-gameboard .square svg {
     height: 60px;
     width: 60px;
     margin: 10px;
+    position: relative;
+    z-index: -9;
+}
+
+#fantasy-gameboard .square svg {
+    height: 40px;
+    width: 40px;
+    margin: 6.666px;
     position: relative;
     z-index: -9;
 }
@@ -324,19 +385,51 @@ path {
     z-index: -10;
 }
 
-.piece {
+#classic-gameboard .piece {
   position: relative;
   z-index: 9;
 }
 
-.piece:hover {
+#classic-gameboard .piece:hover {
   filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.8)); /* subtle gold glow */
   cursor: grab;
 }
 
-.piece:active {
+#classic-gameboard .piece:active {
   cursor: grabbing;
 }
+
+#fantasy-gameboard .fantasy-piece {
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .fantasy-piece:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1)) drop-shadow(0 0 12px rgba(255, 223, 0, 0.9));
+  cursor: grab;
+}
+
+#fantasy-gameboard .fantasy-piece:active {
+  cursor: grabbing;
+}
+
+.captured {
+  animation: implode 0.5s ease-in forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes implode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
 
 /* .beige {
     background-color: rgb(110, 110, 98);
@@ -346,22 +439,33 @@ path {
     background-color: rgb(169, 43, 43);
 } */
 
-.black {
+#classic-gameboard .black {
     fill: black;
 }
 
-.white {
+#classic-gameboard .white {
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
     opacity: 0.95;
     fill: #eee8d5;
 }
 
-.classic-mode .square.last-move-from {
+#fantasy-gameboard .black {
+  fill: #000000; /* jet black */
+  filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.3)); /* subtle black glow */
+}
+
+#fantasy-gameboard .white {
+  fill: #f8f4e3; /* creamy white */
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 240, 0.3)); /* subtle white glow */
+
+}
+
+#classic-gameboard .square.last-move-from {
   box-shadow: 0 0 12px 6px rgba(255, 140, 0, 0.9);
   z-index: 2;
 }
 
-.classic-mode .square.last-move-to {
+#classic-gameboard .square.last-move-to {
   box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
   z-index: 2;
 }

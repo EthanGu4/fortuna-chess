@@ -13,17 +13,7 @@ let castlingMove = null
 let lastMove = { from: null, to: null }
 playerDisplay.textContent = 'white'
 
-
-// const startPieces = [
-//     '', '', '', queen, king, '', '', '',
-//     pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
-//     '', '', '', '', '', '', '', '',
-//     '', '', '', '', '', '', '', '',
-//     '', '', '', '', '', '', '', '',
-//     '', '', '', '', '', '', '', '',
-//     '', '', '', '', '', '', '', '',
-//     rook, knight, bishop, queen, king, bishop, knight, rook
-// ]
+let selectedPiece = null
 
 // castling logic
 let hasMoved = {
@@ -124,8 +114,6 @@ function createClassicBoard() {
 }
 
 function createFantasyBoard() {
-    
-    // const waterSquares = [39, 40, 43, 44, 64, 65, 66, 67, 76, 77, 78, 79, 99, 100, 103, 104];
 
     // random approach for water squares
     const min = 35;
@@ -152,19 +140,20 @@ function createFantasyBoard() {
 
     const waterSquares = getRandomWaterSquares(waterCount, min, max, excludedSquares);
 
+    // different game modes within fantasy, like medieval vs nature?
     const startPieces = [
-        umbrella, rocket, dragon, staffSnake, wizard, tornado, bomb, guitar, pope, bishop, knight, rook,
-        pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp, pawn, shrimp,
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', frog, '', '', '', '', '', '', '', '', frog, '',
-        '', '', '', '', '', '', '', '', '', '', '', '',
+        umbrella, pegasus, dragon, staffSnake, wizard, tornado, bomb, guitar, pope, pirateKing, knight, rook,
+        pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
+        '', '', '', '', '', '', '', '', '', bomb, '', '',
         '', '', '', '', '', '', '', '', '', '', '', '',
         '', frog, '', '', '', '', '', '', '', '', frog, '',
         '', '', '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '', '', '',
-        shrimp, pawn, shrimp, pawn, shrimp, pawn, whale, pawn, shrimp, pawn, shrimp, pawn,
-        umbrella, otter, dragon, khanda, tornado, jedi, bishop, queen, pope, fish, knight, umbrella
+        '', frog, '', '', '', '', '', '', '', '', frog, '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', bomb, '', '', '', '', '', '',
+        pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
+        umbrella, otter, dragon, khanda, tornado, jedi, whale, queen, pope, fish, witch, umbrella
     ]
 
     startPieces.forEach((startPiece, i) => {
@@ -196,6 +185,7 @@ function createFantasyBoard() {
     })
 
     squareFunctionality()
+    updateEvolvedSquares()
 
     if (playerTurn === 'white') {
         reverseIds()
@@ -274,6 +264,8 @@ function dragDrop(e) {
             toSquare.removeChild(fantasyCaptured);
             toSquare.appendChild(draggedElement);
 
+            updateEvolvedSquares();
+
             document.querySelectorAll('.fantasy-piece').forEach(p => {
                 p.style.pointerEvents = '';
             });
@@ -296,6 +288,9 @@ function dragDrop(e) {
 
     if (pieceType === 'pawn' && endRow === width - 1) {
         handlePawnPromotion(toSquare, playerTurn)
+    }
+    if (pieceType === 'pirate' && endRow === width - 1) {
+        handlePirateEvolution(toSquare, playerTurn)
     }
 
     if (draggedElement.id === 'king') {
@@ -323,6 +318,7 @@ function dragDrop(e) {
     fromSquare.classList.add('last-move-from');
     toSquare.classList.add('last-move-to');
 
+    updateEvolvedSquares();
     changePlayer();
     checkGameStatus();
 }
@@ -343,9 +339,10 @@ function checkIfValid(piece, from, to) {
 
     switch(pieceType) {
         
-        case 'shrimp':
+        // CLASSIC BOARD
+
         case 'pawn':
-            const startRow = [8, 9, 10, 11, 12, 13, 14, 15];
+            const startRow = Array.from({ length: width }, (_, i) => 1 * width + i);
             const startCol = getCol(startId);
             const targetCol = getCol(targetId);
 
@@ -418,21 +415,6 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
-
-        // case 'knight':
-        //     if (
-        //         startId + width * 2 + 1 === targetId ||
-        //         startId + width * 2 - 1 === targetId ||
-        //         startId + width + 2 === targetId ||
-        //         startId + width - 2 === targetId ||
-        //         startId - width + 2 === targetId ||
-        //         startId - width - 2 === targetId ||
-        //         startId - width * 2 + 1 === targetId ||
-        //         startId - width * 2 - 1 === targetId
-        //     ) {
-        //         return true
-        //     }
-        //     break;
 
         case 'bishop':
             const bishopMoves = [
@@ -514,7 +496,9 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
-
+        
+        case 'pirateKing':
+        case 'whale':
         case 'queen':
             let queenMoves = [
                 [-1, -1],
@@ -601,14 +585,53 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
-        
+
+
         // FANTASY CASES
 
-        // case 'shrimp':
+        case 'pirate':
+            const startPirateRow = Array.from({ length: width }, (_, i) => 1 * width + i);
+            const startPirateCol = getCol(startId);
+            const targetPirateCol = getCol(targetId);
 
+            if (
+                startId + width === targetId &&
+                !document.querySelector(`[square-id="${startId + width}"]`).firstChild
+            ) {
+                return true;
+            }
 
+            if (
+                (startPirateRow.includes(startId) &&
+                startId + width * 2 === targetId &&
+                !document.querySelector(`[square-id="${startId + width}"]`).firstChild &&
+                !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild) ||
+                (startPirateRow.includes(startId) &&
+                startId + width * 3 === targetId &&
+                !document.querySelector(`[square-id="${startId + width}"]`).firstChild &&
+                !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild &&
+                !document.querySelector(`[square-id="${startId + width * 3}"]`).firstChild)
+            ) {
+                return true;
+            }
 
+            if (
+                targetId === startId + width - 1 &&
+                targetPirateCol === startPirateCol - 1 &&
+                document.querySelector(`[square-id="${targetId}"]`).firstChild
+            ) {
+                return true;
+            }
 
+            if (
+                targetId === startId + width + 1 &&
+                targetPirateCol === startPirateCol + 1 &&
+                document.querySelector(`[square-id="${targetId}"]`).firstChild
+            ) {
+                return true;
+            }
+
+            break;
     }
 }
 
@@ -629,9 +652,22 @@ function handlePawnPromotion(square, color) {
         piece.setAttribute('draggable', true);
         piece.classList.add(color); // Add black or white class
     }
-
     
     square.firstChild?.setAttribute('draggable', true);
+}
+
+function handlePirateEvolution(square, color) {
+
+    // this broken as fuck idkkk
+    const temp = document.createElement('div');
+    temp.innerHTML = pirateKing.trim();
+    const evolvedPiece = temp.firstChild;
+    evolvedPiece.setAttribute('draggable', true);
+    evolvedPiece.classList.add(color);
+
+    square.replaceChildren(evolvedPiece);
+    square.classList.add('square');
+
 }
 
 function isEmpty(squareId) {
@@ -736,6 +772,12 @@ function isKingInCheck(playerColor) {
 }
 
 function hasAnyLegalMoves(playerColor) {
+
+    // temp fix to stalemate?
+    if (document.body.classList.contains('fantasy-mode')) {
+        return true;
+    }
+
     const allSquares = document.querySelectorAll('.square')
     const ownSquares = Array.from(allSquares).filter(sq => {
         const piece = sq.querySelector('.piece')
@@ -777,8 +819,467 @@ function hasAnyLegalMoves(playerColor) {
 }
 
 // Fantasy piece specific code starts here
+
+// list of abilities for each piece
+const abilityMap = {
+
+    bomb : {
+        name : "DOWN THE LINE",
+        charges: 3,
+        effect: function (piece) {
+            if (abilityMap.bomb.charges <= 0) {
+                console.log("No charges left for DOWN THE LINE!");
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const col = originId % width;
+            let currentRow = Math.floor(originId / width);
+            let nextRow = currentRow + 1;
+
+            const path = [];
+
+            while (nextRow < width) {
+                const nextId = nextRow * width + col;
+                const nextSquare = document.querySelector(`[square-id="${nextId}"]`);
+                const pieceInNext = nextSquare.querySelector('.piece, .fantasy-piece');
+
+                if (pieceInNext) break;
+
+                path.push(nextSquare);
+                currentRow = nextRow;
+                nextRow++;
+            }
+
+            let i = 0;
+
+            function slideStep() {
+                if (i < path.length) {
+                    const nextSquare = path[i];
+                    piece.parentElement.removeChild(piece);
+                    nextSquare.appendChild(piece);
+                    i++;
+                    setTimeout(slideStep, 100);
+                } else {
+                    triggerExplosion(currentRow, col);
+                }
+            }
+
+            slideStep();
+
+            function triggerExplosion(row, col) {
+                const splashRadius = [-1, 0, 1];
+                const affectedSquares = [];
+                
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 400);
+
+                splashRadius.forEach(dy => {
+                    splashRadius.forEach(dx => {
+                        const r = row + dy;
+                        const c = col + dx;
+                        if (r >= 0 && r < width && c >= 0 && c < width) {
+                            const targetId = r * width + c;
+                            const square = document.querySelector(`[square-id="${targetId}"]`);
+                            if (square) affectedSquares.push(square);
+                        }
+                    });
+                });
+
+                affectedSquares.forEach((square, i) => {
+                    setTimeout(() => {
+                        square.classList.add('explosion-zone');
+
+                        const target = square.querySelector('.piece, .fantasy-piece');
+                        if (target) {
+                            square.removeChild(target);
+                            updateEvolvedSquares();
+                        }
+                        
+
+                        const explosion = document.createElement('div');
+                        explosion.textContent = '💥';
+                        explosion.style.position = 'absolute';
+                        explosion.style.top = '50%';
+                        explosion.style.left = '50%';
+                        explosion.style.transform = 'translate(-50%, -50%) scale(2.2)';
+                        explosion.style.fontSize = '3.5rem';
+                        explosion.style.pointerEvents = 'none';
+                        explosion.style.zIndex = '999';
+                        explosion.style.animation = 'cannon-pulse-glow 0.5s ease-out';
+
+                        const ring = document.createElement('div');
+                        ring.classList.add('explosion-ring');
+                        square.appendChild(ring);
+                        square.appendChild(explosion);
+
+                        setTimeout(() => {
+                            explosion.remove();
+                            ring.remove();
+                            square.classList.remove('explosion-zone');
+                        }, 600);
+                    }, i * 100);
+                });
+
+                abilityMap.bomb.charges -= 1;
+                console.log(`💣 Bomb exploded! Charges left: ${abilityMap.bomb.charges}`);
+            }
+        }
+    },
+
+    dragon : {
+        name : "LANE OF FIRE",
+        charges: 4,
+        // cooldown: 10,
+        effect: (piece) => {
+
+            if (abilityMap.dragon.charges <= 0) {
+                console.log("No charges left for LANE OF FIRE!");
+                return;
+            }
+
+            const randomCol = Math.floor(Math.random() * width); // column 0–7
+            console.log(`🔥 Dragon casts LANE OF FIRE on column ${randomCol + 1}!`);
+            
+            flashColumn(randomCol);
+            
+            setTimeout(() => {
+                const allSquares = document.querySelectorAll(`[square-id]`);
+                allSquares.forEach(square => {
+                    const squareId = Number(square.getAttribute('square-id'));
+                    const col = squareId % width;
+
+                    if (col === randomCol) {
+                        const target = square.querySelector('.piece, .fantasy-piece');
+                        if (target && target.dataset.fireproof !== 'true') {
+                            square.removeChild(target);
+                        }
+                    }
+                });
+            }, 90 * width);
+
+            abilityMap.dragon.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.dragon.charges}`);
+        }
+    },
+
+    fish : {
+        name : "SINK AND RISE",
+        charges: Infinity, 
+        effect: function (piece) {
+            
+            if (abilityMap.fish.charges <= 0) {
+                console.log("No charges left for SINK AND RISE!");
+                return;
+            }
+
+            const waterSquares = Array.from(document.querySelectorAll('.square.water'));
+
+            const unoccupied = waterSquares.filter(square => {
+                return !square.querySelector('.piece, .fantasy-piece');
+            });
+
+            if (unoccupied.length === 0) {
+                console.log("🐟 No unoccupied water squares available!");
+                return;
+            }
+
+            const randomSquare = unoccupied[Math.floor(Math.random() * unoccupied.length)];
+
+            const currentSquare = piece.parentNode;
+            currentSquare.removeChild(piece);
+            randomSquare.appendChild(piece);
+
+            // Optional visual effect
+            randomSquare.classList.add('fish-teleport');
+            setTimeout(() => randomSquare.classList.remove('fish-teleport'), 300);
+
+            console.log("🐟 Fish used SINK AND RISE!");
+
+            abilityMap.fish.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.fish.charges}`);
+        }
+    },
+
+    frog : {
+        name : "SWAMP SWAP",
+        charges: Infinity,
+        effect: function (piece) {
+
+            const selectedPiece = piece;
+            const selectedSquare = selectedPiece.parentElement;
+
+            selectedSquare.classList.add('swapping-frog');
+            document.querySelectorAll('.fantasy-piece').forEach(p => p.setAttribute('draggable', false));
+
+            const handleSwapClick = (e) => {
+                const target = e.target;
+                const clickedPiece = target.closest('.fantasy-piece');
+                const clickedSquare = target.closest('.square');
+
+                if (!clickedPiece || clickedPiece === selectedPiece) {
+                    console.log("SWAMP SWAP canceled.");
+                    cleanup();
+                    return;
+                }
+
+                if (!clickedPiece.classList.contains(playerTurn)) {
+                    console.log("You can only swap with an ally.");
+                    return;
+                }
+
+                const fromSquare = selectedPiece.parentElement;
+                const toSquare = clickedPiece.parentElement;
+
+                fromSquare.appendChild(clickedPiece);
+                toSquare.appendChild(selectedPiece);
+
+                cleanup();
+            };
+
+            function cleanup() {
+                document.removeEventListener('click', handleSwapClick);
+                selectedSquare.classList.remove('swapping-frog');
+                document.querySelectorAll('.fantasy-piece').forEach(p => p.setAttribute('draggable', true));
+                updateEvolvedSquares();
+            }
+
+            setTimeout(() => {
+                document.addEventListener('click', handleSwapClick);
+            }, 0);
+        }
+    },
+
+    pirate : {
+        name : "FRONTAL SWEEP",
+        charges: 8,
+        effect: function (piece) {
+
+            if (abilityMap.pirate.charges <= 0) {
+                console.log("No charges left for FRONTAL SWEEP!");
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const row = getRow(originId);
+            const col = getCol(originId);
+            
+            const frontRow = row + 1;
+
+            if (frontRow >= width) {
+                return;
+            }
+
+            for (let diffCol = -1; diffCol <= 1; diffCol++) {
+                const targetCol = col + diffCol;
+
+                if (targetCol < 0 || targetCol >= width) continue;
+
+                const targetId = frontRow * width + targetCol;
+                const targetSquare = document.querySelector(`[square-id="${targetId}"]`);
+                
+                if (targetSquare) {
+                    targetSquare.classList.add('sweep-strike');
+
+                    targetSquare.addEventListener('animationend', () => {
+                        targetSquare.classList.remove('sweep-strike');
+                    }, { once: true });
+
+                    const target = targetSquare?.querySelector('.fantasy-piece');
+
+                    if (target) {
+                        setTimeout(() => targetSquare.removeChild(target), 150);
+                    }
+                }
+            }
+
+            abilityMap.pirate.charges -= 1;
+            console.log(`🚴‍♀️ Pirate used FRONTAL SWEEP! Charges left: ${abilityMap.pirate.charges}`);
+        }
+    },
+
+    pirateKing : {
+        name : "CANNONBALL BARRAGE",
+        charges: 7,
+        effect: function (piece) {
+
+            if (abilityMap.pirateKing.charges <= 0) {
+                console.log("No charges left for CANNONBALL BARRAGE!");
+                return;
+            }
+
+            const allSquares = document.querySelectorAll(`[square-id]`);
+            const numberOfTargets = Math.floor(Math.random() * 4) + 8;
+            const selectedSquares = [];
+
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+
+            while (selectedSquares.length < numberOfTargets) {
+                const randomSquare = allSquares[Math.floor(Math.random() * allSquares.length)];
+                if (!selectedSquares.includes(randomSquare)) {
+                    selectedSquares.push(randomSquare);
+                }
+            }
+
+            selectedSquares.forEach((square, i) => {
+                setTimeout(() => {
+                    square.classList.add('barrage-target');
+
+                    const cannonball = document.createElement('div');
+                    cannonball.classList.add('cannonball');
+                    square.appendChild(cannonball);
+                    setTimeout(() => cannonball.remove(), 750);
+
+                    setTimeout(() => {
+                    const target = square.querySelector('.piece, .fantasy-piece');
+                    if (target && !target.id.includes('pirateKing')) {
+                        square.removeChild(target);
+                    }
+                        square.classList.remove('barrage-target');
+                    }, 1500);
+                }, i * 200);
+            });
+
+            console.log(`🏴‍☠️ PirateKing launched CANNONBALL BARRAGE on ${numberOfTargets} squares!`);
+            
+            abilityMap.pirateKing.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.pirateKing.charges}`);
+        }
+    },
+
+    whale : {
+        name : "TIDAL WAVE",
+        charges: 6,
+        effect: function (piece) {
+
+            if (abilityMap.whale.charges <= 0) {
+                console.log("No charges left for TIDAL WAVE!");
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const splashRadius = [-1, 0, 1];
+            const affectedSquares = [];
+
+            splashRadius.forEach(dy => {
+                splashRadius.forEach(dx => {
+                    const row = Math.floor(originId / width);
+                    const col = originId % width;
+                    const newRow = row + dy;
+                    const newCol = col + dx;
+                    if (newRow >= 0 && newRow < width && newCol >= 0 && newCol < width) {
+                        const targetId = newRow * width + newCol;
+                        const square = document.querySelector(`[square-id="${targetId}"]`);
+                        if (square) {
+                            affectedSquares.push(square);
+                            square.classList.add('water');
+                        }
+                    }
+                });
+            });
+
+            // Animate + eliminate logic
+            affectedSquares.forEach((square, i) => {
+            setTimeout(() => {
+                square.classList.add('splash-zone');
+
+                const target = square.querySelector('.piece, .fantasy-piece');
+                if (target && target.dataset.waterWalking !== 'true') {
+                    square.removeChild(target);
+                }
+
+                // Splash emoji (optional)
+                const splash = document.createElement('div');
+                splash.textContent = '💦';
+                splash.style.position = 'absolute';
+                splash.style.top = '50%';
+                splash.style.left = '50%';
+                splash.style.transform = 'translate(-50%, -50%) scale(1.4)';
+                splash.style.fontSize = '2rem';
+                splash.style.pointerEvents = 'none';
+                splash.style.zIndex = '999';
+                square.appendChild(splash);
+                setTimeout(() => {
+                    splash.remove();
+                    square.classList.remove('splash-zone');
+                }, 500);
+            }, i * 80);
+            });
+
+            abilityMap.whale.charges -= 1;
+            console.log(`🐋 Whale unleashed a tidal wave! Charges left: ${abilityMap.whale.charges}`);
+            updateEvolvedSquares();
+        }
+    }
+    
+}
+
+function flashColumn(colIndex, delay = 90) {
+  const squares = Array.from(document.querySelectorAll('[square-id]'))
+    .filter(sq => Number(sq.getAttribute('square-id')) % width === colIndex)
+    .sort((a, b) => Number(a.getAttribute('square-id')) - Number(b.getAttribute('square-id')));
+
+  squares.forEach((square, i) => {
+    setTimeout(() => {
+      square.classList.add('fire-column');
+    }, delay * i);
+
+    setTimeout(() => {
+      square.classList.remove('fire-column');
+    }, delay * i + delay * 0.8);
+  });
+}
+
+// casting of abilities
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'a' && selectedPiece) {
+    const pieceId = selectedPiece.id;
+    const ability = abilityMap[pieceId];
+    const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
+
+    if (pieceColor !== playerTurn) {
+        console.log(`It's ${playerTurn}'s turn! Cannot cast this ability!`);
+        return;
+    }
+
+    if (ability) {
+        ability.effect(selectedPiece, () => {
+            changePlayer();
+        });
+    }
+
+    updateEvolvedSquares();
+
+    // do cooldown logic later just cast for now
+    // if (ability) {
+    //   const currentTurn = getCurrentTurn();
+    //   const cooldownRemaining = ability.cooldown - (currentTurn - ability.lastUsedTurn);
+
+    //   if (cooldownRemaining <= 0) {
+    //     ability.effect(selectedPiece);
+    //     ability.lastUsedTurn = currentTurn;
+    //     showCooldownFeedback(selectedPiece, ability.cooldown);
+    //   } else {
+    //     console.log(`Ability on cooldown: ${cooldownRemaining} turn(s) left.`);
+    //   }
+    // }
+  }
+});
+
 function isFantasyPiece(piece) {
   return piece.classList.contains('fantasy-piece');
+}
+
+function updateEvolvedSquares() {
+    document.querySelectorAll('#fantasy-gameboard .square').forEach(square => {
+        const piece = square.querySelector('.fantasy-piece');
+        if (piece && piece.classList.contains('evolved')) {
+            square.classList.add('evolved');
+        } else {
+            square.classList.remove('evolved');
+        }
+    });
 }
 
 function isWaterSquare(square) {
@@ -851,7 +1352,7 @@ function restartGame() {
 
 function flashInvalid(square) {
     square.classList.remove('invalid-move');
-    void square.offsetWidth; // Force reflow
+    void square.offsetWidth;
     square.classList.add('invalid-move');
 }
 
@@ -923,5 +1424,13 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 's') {
     sparklesEnabled = !sparklesEnabled;
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const piece = e.target.closest('.fantasy-piece');
+  if (piece) {
+    selectedPiece = piece;
+    console.log(selectedPiece);
   }
 });

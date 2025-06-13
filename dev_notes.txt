@@ -1,0 +1,17 @@
+If you have an error related to flashes or pulses appearing BELOW squares,
+in the css file make sure to add a #fantasy-gameboard to ensure that the z-index is
+referenced based on other objects in the gameboard.
+
+!! PIECES HAVE ACTIVE AND PASSIVE ABILITIES !!
+
+TO-DO:
+- Finish creative process of determining piece attributes and piece abilities
+- Code them and add appropriate css for stylish purposes
+- Fix the callback() and playerTurn dilemna when calling an ability, right now it calls instantly, which can cause some abilities to malfunction
+- Add moving logic (this can happen later)
+- Figure out board layout, where pieces can sit optimally
+- Figure out whole checkGameStatus, since right now it only works for the classic-gameboard
+
+WARNING:
+- watch out for overflow: hidden it can cover a lot of the css and make some of the effects hidden behind the squares
+FOUDN THE ISSUE ITS LITERALLY CUZ I APPLIED TO THE PIECE RATHER THAN THE SQUAREA HAHAHAFHOAEFHOIA

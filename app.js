@@ -11,6 +11,9 @@ let playerTurn = "white"
 let gameOver = false
 let castlingMove = null
 let lastMove = { from: null, to: null }
+let canCastAbility = true;
+let canCastSpecialAbility = true;
+
 playerDisplay.textContent = 'white'
 
 let selectedPiece = null
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function startGameWithMode(mode) {
 
     modeSelection.style.display = 'none';
-    container.style.display = 'block';
+    container.style.display = 'flex';
     document.body.classList.remove('classic-mode', 'fantasy-mode');
 
     gameBoardClassic.innerHTML = '';
@@ -142,18 +145,18 @@ function createFantasyBoard() {
 
     // different game modes within fantasy, like medieval vs nature?
     const startPieces = [
-        umbrella, pegasus, dragon, staffSnake, wizard, tornado, bomb, guitar, pope, pirateKing, knight, rook,
+        umbrella, thunder, dragon, staffSnake, wizard, tornado, bomb, guitar, priest, pirateKing, knight, rook,
         pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
-        '', '', '', '', '', '', '', '', '', bomb, '', '',
+        '', balloon, '', '', '', '', '', '', '', bomb, '', pope,
+        '', '', '', '', '', '', crocodile, '', koi, '', '', '',
+        '', frog, '', '', '', kraken, '', '', '', '', frog, '',
+        '', '', phoenix, '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '', '', '',
-        '', frog, '', '', '', '', '', '', '', '', frog, '',
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', frog, '', '', '', '', '', '', '', '', frog, '',
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', bomb, '', '', '', '', '', '',
+        '', frog, '', '', '', '', '', '', '', koi, frog, '',
+        '', gryphon, kraken, '', dynamite, '', '', '', '', '', '', '',
+        zulfiqar, '', '', '', '', bomb, '', '', violin, sith, '', hamsa,
         pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
-        umbrella, otter, dragon, khanda, tornado, jedi, whale, queen, pope, fish, witch, umbrella
+        umbrella, otter, dragon, khanda, tornado, jedi, whale, queen, priest, fish, witch, umbrella
     ]
 
     startPieces.forEach((startPiece, i) => {
@@ -499,6 +502,8 @@ function checkIfValid(piece, from, to) {
         
         case 'pirateKing':
         case 'whale':
+        case 'crocodile':
+        case 'witch':
         case 'queen':
             let queenMoves = [
                 [-1, -1],
@@ -711,6 +716,7 @@ function changePlayer() {
         revertIds()
         playerTurn = 'black'
     }
+    updateEvolvedSquares();
     playerDisplay.textContent = playerTurn
 }
 
@@ -820,13 +826,50 @@ function hasAnyLegalMoves(playerColor) {
 
 // Fantasy piece specific code starts here
 
+// maps one-to-one
+const evolutionMap = {
+    bomb: dynamite,
+    dragon: phoenix,
+    fish: koi,
+    frog: crocodile,
+    gryphon: hamsa,
+    guitar: violin,
+    jedi: sith,
+    khanda: zulfiqar,
+    otter: whale,
+    pirate: pirateKing,
+    priest: pope,
+    staffSnake: kraken,
+    tornado: thunder,
+    umbrella: balloon,
+    wizard: witch
+}
+
+const devolutionMap = {
+    dynamite: 'bomb',
+    phoenix: 'dragon',
+    koi: 'fish',
+    crocodile: 'frog',
+    hamsa: 'gryphon',
+    violin: 'guitar',
+    sith: 'jedi',
+    zulfiqar: 'khanda',
+    whale: 'otter',
+    pirateKing: 'pirate',
+    pope: 'priest',
+    kraken: 'staffSnake',
+    thunder: 'tornado',
+    balloon: 'umbrella',
+    witch: 'wizard'
+}
+
 // list of abilities for each piece
 const abilityMap = {
 
     bomb : {
         name : "DOWN THE LINE",
         charges: 3,
-        effect: function (piece) {
+        effect: function (piece, finished) {
             if (abilityMap.bomb.charges <= 0) {
                 console.log("No charges left for DOWN THE LINE!");
                 return;
@@ -923,6 +966,7 @@ const abilityMap = {
 
                 abilityMap.bomb.charges -= 1;
                 console.log(`💣 Bomb exploded! Charges left: ${abilityMap.bomb.charges}`);
+                finished();
             }
         }
     },
@@ -931,7 +975,7 @@ const abilityMap = {
         name : "LANE OF FIRE",
         charges: 4,
         // cooldown: 10,
-        effect: (piece) => {
+        effect: (piece, finished) => {
 
             if (abilityMap.dragon.charges <= 0) {
                 console.log("No charges left for LANE OF FIRE!");
@@ -953,6 +997,7 @@ const abilityMap = {
                         const target = square.querySelector('.piece, .fantasy-piece');
                         if (target && target.dataset.fireproof !== 'true') {
                             square.removeChild(target);
+                            updateEvolvedSquares();
                         }
                     }
                 });
@@ -960,13 +1005,14 @@ const abilityMap = {
 
             abilityMap.dragon.charges -= 1;
             console.log(`Charges remaining: ${abilityMap.dragon.charges}`);
+            finished();
         }
     },
 
     fish : {
         name : "SINK AND RISE",
         charges: Infinity, 
-        effect: function (piece) {
+        effect: function (piece, finished) {
             
             if (abilityMap.fish.charges <= 0) {
                 console.log("No charges left for SINK AND RISE!");
@@ -990,7 +1036,6 @@ const abilityMap = {
             currentSquare.removeChild(piece);
             randomSquare.appendChild(piece);
 
-            // Optional visual effect
             randomSquare.classList.add('fish-teleport');
             setTimeout(() => randomSquare.classList.remove('fish-teleport'), 300);
 
@@ -998,13 +1043,14 @@ const abilityMap = {
 
             abilityMap.fish.charges -= 1;
             console.log(`Charges remaining: ${abilityMap.fish.charges}`);
+            finished();
         }
     },
 
     frog : {
         name : "SWAMP SWAP",
         charges: Infinity,
-        effect: function (piece) {
+        effect: function (piece, finished) {
 
             const selectedPiece = piece;
             const selectedSquare = selectedPiece.parentElement;
@@ -1033,6 +1079,7 @@ const abilityMap = {
 
                 fromSquare.appendChild(clickedPiece);
                 toSquare.appendChild(selectedPiece);
+                finished();
 
                 cleanup();
             };
@@ -1053,7 +1100,7 @@ const abilityMap = {
     pirate : {
         name : "FRONTAL SWEEP",
         charges: 8,
-        effect: function (piece) {
+        effect: function (piece, finished) {
 
             if (abilityMap.pirate.charges <= 0) {
                 console.log("No charges left for FRONTAL SWEEP!");
@@ -1090,20 +1137,147 @@ const abilityMap = {
                     if (target) {
                         setTimeout(() => targetSquare.removeChild(target), 150);
                     }
+
+                    setTimeout(() => updateEvolvedSquares(), 200);
+
                 }
             }
 
             abilityMap.pirate.charges -= 1;
             console.log(`🚴‍♀️ Pirate used FRONTAL SWEEP! Charges left: ${abilityMap.pirate.charges}`);
+            finished();
+        }
+    },
+
+    priest : {
+
+    },
+
+    staffSnake : {
+        name : "SNAKE STAFF",
+        charges: 9,
+        effect: function (piece, finished) {
+
+            if (abilityMap.staffSnake.charges <= 0) {
+                console.log("No charges left for SNAKE BITE!");
+                return;
+            }
+
+            const clickHandler = (e) => {
+                const target = e.target.closest('.fantasy-piece');
+
+                if (!target) return;
+
+                const type = target.id;
+                const isEvolved = target.classList.contains('evolved');
+
+                if (target === piece || !target.classList.contains(playerTurn) || !type || isEvolved || !evolutionMap[type]) {
+                    document.removeEventListener('click', clickHandler);
+                    return;
+                }
+
+                const evolvedHTML = evolutionMap[type];
+                target.parentElement.innerHTML = evolvedHTML;
+
+                abilityMap.staffSnake.charges -= 1;
+                console.log(`Snake Bite used! ${abilityMap.staffSnake.charges} charges left.`);
+
+                document.removeEventListener('click', clickHandler);
+                updateEvolvedSquares();
+                finished();
+            };
+
+            setTimeout(() => {
+                document.addEventListener('click', clickHandler);
+            }, 0);
+        }
+    },
+}
+
+const specialAbilityMap = {
+
+    koi : {
+        name : "DUAL AFFINITY",
+        charges: 30,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.koi.charges <= 0) {
+                console.log("No charges left for DUAL AFFINITY!");
+                return;
+            }
+
+            const pieceColor = piece.classList.contains('white') ? 'white' : 'black';
+            const allSquares = Array.from(document.querySelectorAll('.square'));
+
+            const validTargets = allSquares.filter(sq => {
+
+                if (sq.classList.contains('water')) return false;
+
+                const target = sq.querySelector('.fantasy-piece, .piece');
+                if (!target) return true;
+                return !target.classList.contains(pieceColor);
+            });
+
+            if (validTargets.length < 2) {
+                return;
+            }
+
+            const shuffled = validTargets.sort(() => 0.5 - Math.random());
+            const [firstTarget, secondTarget] = [shuffled[0], shuffled[1]];
+
+            const strike = (square, i) => {
+                setTimeout(() => {
+                    square.classList.add('water-strike');
+                    setTimeout(() => square.classList.remove('water-strike'), 500);
+
+                    const targetPiece = square.querySelector('.fantasy-piece');
+                    if (targetPiece) {
+                        const isEnemy = !targetPiece.classList.contains(pieceColor);
+                        const isWaterWalker = targetPiece.dataset.waterWalking === 'true';
+
+                        if (isEnemy && !isWaterWalker) {
+                            square.removeChild(targetPiece)
+                            square.classList.add('water');
+
+                            const temp = document.createElement('div');
+                            temp.innerHTML = koi.trim();
+                            const koiClone = temp.firstChild;
+                            koiClone.setAttribute('draggable', true);
+                            koiClone.classList.add(pieceColor);
+
+                            square.replaceChildren(koiClone);
+                            square.classList.add('square');
+
+                            updateEvolvedSquares();
+
+                        } else {
+                            square.classList.add('water');
+                        }
+                        
+                    } else {
+                        square.classList.add('water');
+                    }
+
+                    if (i === 1) {
+                        setTimeout(finished(), 300);
+                    }
+                }, i * 400);
+            };
+
+            strike(firstTarget, 0);
+            strike(secondTarget, 1);
+
+            specialAbilityMap.koi.charges -= 1;
+            console.log(`🐟 KOI used DUAL AFFECTION! Charges left: ${specialAbilityMap.koi.charges}`);
         }
     },
 
     pirateKing : {
         name : "CANNONBALL BARRAGE",
         charges: 7,
-        effect: function (piece) {
+        effect: function (piece, finished) {
 
-            if (abilityMap.pirateKing.charges <= 0) {
+            if (specialAbilityMap.pirateKing.charges <= 0) {
                 console.log("No charges left for CANNONBALL BARRAGE!");
                 return;
             }
@@ -1135,25 +1309,27 @@ const abilityMap = {
                     const target = square.querySelector('.piece, .fantasy-piece');
                     if (target && !target.id.includes('pirateKing')) {
                         square.removeChild(target);
+                        updateEvolvedSquares();
                     }
                         square.classList.remove('barrage-target');
-                    }, 1500);
+                    }, 1000);
                 }, i * 200);
             });
 
             console.log(`🏴‍☠️ PirateKing launched CANNONBALL BARRAGE on ${numberOfTargets} squares!`);
             
-            abilityMap.pirateKing.charges -= 1;
-            console.log(`Charges remaining: ${abilityMap.pirateKing.charges}`);
+            specialAbilityMap.pirateKing.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.pirateKing.charges}`);
+            finished();
         }
     },
 
     whale : {
         name : "TIDAL WAVE",
         charges: 6,
-        effect: function (piece) {
+        effect: function (piece, finished) {
 
-            if (abilityMap.whale.charges <= 0) {
+            if (specialAbilityMap.whale.charges <= 0) {
                 console.log("No charges left for TIDAL WAVE!");
                 return;
             }
@@ -1181,38 +1357,39 @@ const abilityMap = {
 
             // Animate + eliminate logic
             affectedSquares.forEach((square, i) => {
-            setTimeout(() => {
-                square.classList.add('splash-zone');
-
-                const target = square.querySelector('.piece, .fantasy-piece');
-                if (target && target.dataset.waterWalking !== 'true') {
-                    square.removeChild(target);
-                }
-
-                // Splash emoji (optional)
-                const splash = document.createElement('div');
-                splash.textContent = '💦';
-                splash.style.position = 'absolute';
-                splash.style.top = '50%';
-                splash.style.left = '50%';
-                splash.style.transform = 'translate(-50%, -50%) scale(1.4)';
-                splash.style.fontSize = '2rem';
-                splash.style.pointerEvents = 'none';
-                splash.style.zIndex = '999';
-                square.appendChild(splash);
                 setTimeout(() => {
-                    splash.remove();
-                    square.classList.remove('splash-zone');
-                }, 500);
-            }, i * 80);
+                    square.classList.add('splash-zone');
+
+                    const target = square.querySelector('.piece, .fantasy-piece');
+                    if (target && target.dataset.waterWalking !== 'true') {
+                        square.removeChild(target);
+                    }
+
+                    // Splash emoji (optional)
+                    const splash = document.createElement('div');
+                    splash.textContent = '💦';
+                    splash.style.position = 'absolute';
+                    splash.style.top = '50%';
+                    splash.style.left = '50%';
+                    splash.style.transform = 'translate(-50%, -50%) scale(1.4)';
+                    splash.style.fontSize = '2rem';
+                    splash.style.pointerEvents = 'none';
+                    splash.style.zIndex = '999';
+                    square.appendChild(splash);
+                    setTimeout(() => {
+                        splash.remove();
+                        square.classList.remove('splash-zone');
+                        updateEvolvedSquares();
+                    }, 500);
+                }, i * 80);
+
             });
 
-            abilityMap.whale.charges -= 1;
-            console.log(`🐋 Whale unleashed a tidal wave! Charges left: ${abilityMap.whale.charges}`);
-            updateEvolvedSquares();
+            specialAbilityMap.whale.charges -= 1;
+            console.log(`🐋 Whale unleashed a tidal wave! Charges left: ${specialAbilityMap.whale.charges}`);
+            finished();
         }
     }
-    
 }
 
 function flashColumn(colIndex, delay = 90) {
@@ -1234,7 +1411,16 @@ function flashColumn(colIndex, delay = 90) {
 // casting of abilities
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'a' && selectedPiece) {
-    const pieceId = selectedPiece.id;
+
+    if (!canCastAbility) {
+        return;
+    }
+    
+    let pieceId = selectedPiece.id;
+
+    if (selectedPiece.classList.contains('evolved')) {
+        pieceId = devolutionMap[selectedPiece.id];
+    }
     const ability = abilityMap[pieceId];
     const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
 
@@ -1244,28 +1430,58 @@ document.addEventListener('keydown', (e) => {
     }
 
     if (ability) {
+
         ability.effect(selectedPiece, () => {
             changePlayer();
+            
+            // time delay between abilities
+            canCastAbility = false;
+
+            setTimeout(() => {
+                canCastAbility = true;
+            }, 1500);
+
         });
     }
 
-    updateEvolvedSquares();
-
-    // do cooldown logic later just cast for now
-    // if (ability) {
-    //   const currentTurn = getCurrentTurn();
-    //   const cooldownRemaining = ability.cooldown - (currentTurn - ability.lastUsedTurn);
-
-    //   if (cooldownRemaining <= 0) {
-    //     ability.effect(selectedPiece);
-    //     ability.lastUsedTurn = currentTurn;
-    //     showCooldownFeedback(selectedPiece, ability.cooldown);
-    //   } else {
-    //     console.log(`Ability on cooldown: ${cooldownRemaining} turn(s) left.`);
-    //   }
-    // }
   }
 });
+
+// special abilities for evolved units
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'q' && selectedPiece) {
+
+    if (!canCastSpecialAbility || !selectedPiece.classList.contains('evolved')) {
+        return;
+    }
+
+    const pieceId = selectedPiece.id;
+    const ability = specialAbilityMap[pieceId];
+    const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
+
+    if (pieceColor !== playerTurn) {
+        console.log(`It's ${playerTurn}'s turn! Cannot cast this ability!`);
+        return;
+    }
+
+    if (ability) {
+
+        ability.effect(selectedPiece, () => {
+            changePlayer();
+            
+            // time delay between abilities
+            canCastSpecialAbility = false;
+
+            setTimeout(() => {
+                canCastSpecialAbility = true;
+            }, 1500);
+
+        });
+    }
+
+  }
+});
+
 
 function isFantasyPiece(piece) {
   return piece.classList.contains('fantasy-piece');
@@ -1429,8 +1645,29 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('click', (e) => {
   const piece = e.target.closest('.fantasy-piece');
+
+  if (selectedPiece) {
+    selectedPiece.classList.remove('select-glow');
+  }
+
   if (piece) {
     selectedPiece = piece;
-    console.log(selectedPiece);
+    selectedPiece.classList.add('select-glow');
+
+    const name = selectedPiece.id || 'Unknown';
+    const color = selectedPiece.classList.contains('white') ? 'white' : 'black';
+    const evolved = selectedPiece.classList.contains('evolved') ? 'yes' : 'no';
+
+    document.getElementById('piece-name').textContent = name;
+    document.getElementById('piece-color').textContent = color;
+    document.getElementById('piece-evolved').textContent = evolved;
+
+  } else {
+    selectedPiece = null;
+    
+    document.getElementById('piece-name').textContent = 'None';
+    document.getElementById('piece-color').textContent = '-';
+    document.getElementById('piece-evolved').textContent = '-';
+
   }
 });

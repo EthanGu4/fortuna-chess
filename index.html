@@ -17,14 +17,25 @@
     </div>
 
     <div id="container">
+        <div id="top-wrapper">
+            <div id="game-wrapper">
+                <div id="classic-gameboard"></div>
+                <div id="fantasy-gameboard"></div>
+            </div>
 
-        <div id="classic-gameboard"></div>
-        <div id="fantasy-gameboard"></div>
-
-        <p id="player-display">It is <span id="player"></span>'s turn</p>
-        <p id="info-display"></p>
-        <button id="restart-btn">Restart Game</button>
-
+            <div id="selected-piece-info-modal">
+                <h2>Selected Piece</h2>
+                <p><strong>Name:</strong> <span id="piece-name">None</span></p>
+                <p><strong>Color:</strong> <span id="piece-color">-</span></p>
+                <p><strong>Evolved:</strong> <span id="piece-evolved">-</span></p>
+            </div>
+        </div>
+    
+        <div id="bottom-wrapper">
+            <p id="player-display">It is <span id="player"></span>'s turn</p>
+            <p id="info-display"></p>
+            <button id="restart-btn">Restart Game</button>
+        </div>
     </div>
 
     <audio id="background-music" loop>

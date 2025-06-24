@@ -1,0 +1,11 @@
+USER FLOWS
+
+Credit to LLMs for helping with the styling and graphics!
+All graphics found online at fontawesome.com or svgrepo.com, edited with svgomg optimize tool
+
+ok here we go lots of reading ahead
+
+- all of the shit will be added later, most of the rules are already written on a doc they just need to be transfered
+
+Chess app using js, html, css
+

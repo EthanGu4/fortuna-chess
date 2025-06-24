@@ -1,0 +1,42 @@
+If you have an error related to flashes or pulses appearing BELOW squares,
+in the css file make sure to add a #fantasy-gameboard to ensure that the z-index is
+referenced based on other objects in the gameboard.
+
+!! PIECES HAVE ACTIVE AND PASSIVE ABILITIES !!
+
+okay pieces are all done, evolved versions and everything but they just need attributes and abilities, will work on that later
+
+TO-DO:
+- Finish creative process of determining piece attributes and piece abilities
+- Code them and add appropriate css for stylish purpose
+- Figure out whole checkGameStatus, since right now it only works for the classic-gameboard
+- have to figure out color-wise piece abilities, like each individual piece should have its own cooldowns...
+- FINISH DIVINE PROTECTION and replace across all differfent abilites and instances of piece removal
+- QOL shit like make all the text and spacing consistent
+
+WARNING:
+- watch out for overflow: hidden it can cover a lot of the css and make some of the effects hidden behind the squares
+FOUDN THE ISSUE ITS LITERALLY CUZ I APPLIED TO THE PIECE RATHER THAN THE SQUAREA HAHAHAFHOAEFHOIA
+
+bruh wtf is going on...
+
+tracking of css elements:
+
+#classic-gameboard refers to the classic board using classical chess pieces (8x8)
+#fantasy-gameboard refers to the fantasy board using fantasy pieces (12x12)
+
+alphabetical order is king for sorting
+
+USE DATASET for individual piece creation, when this is done you can treat individual pieces as separate entities/objects without actual OOP
+
+NOTE : 6/24 commit -> finished every single piece and their abilities as well as styling, movement has not been completed, a lot of new squares have been added (lava, magci, swamp, eye of storm, void)
+- next steps involve refining abilities and balancing game mechanics
+- also giving movement to all pieces
+- turn-based events, spawning magic squares, maybe "loot boxes" to incentivize player movement
+- user interface and overlay with rules and individual piece information, based on selection
+- work on conjuring logic and ultimate piece fusion logic
+
+- FUTURE FUTURE -> different game boards and themes, having different pieces and set-ups depending on player choice
+- FUTURE FUTURE -> more music and themes available in general
+- FUTURE FUTURE -> introducing secondary abilities and passives to pieces
+- FUTURE FUTURE -> QOL changes

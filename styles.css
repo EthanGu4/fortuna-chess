@@ -189,29 +189,51 @@ body.fantasy-mode.cursor-reset * {
 }
 
 #fantasy-gameboard .square.light {
-  background-color: #6a4ca3;
+  background-color: #5e4193;
   background-image:
-    radial-gradient(circle at center, #bfa6ff 15%, transparent 80%);
+    radial-gradient(circle at 60% 40%, #a18cd1 12%, transparent 75%);
   box-shadow:
-    inset 0 0 8px 2px rgba(190, 160, 255, 0.5);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+    inset 0 0 4px 1px rgba(160, 130, 210, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
   overflow: visible;
 }
 
 #fantasy-gameboard .square.dark {
-  background-color: #392e6d;
+  background-color: #32285e;
   background-image:
-    radial-gradient(circle at center, #7d6acc 20%, transparent 80%);
+    radial-gradient(circle at 40% 60%, #6f5db7 15%, transparent 75%);
   box-shadow:
-    inset 0 0 10px 3px rgba(120, 100, 190, 0.4);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+    inset 0 0 5px 1.5px rgba(100, 80, 160, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
   overflow: visible;
 }
 
+/* POTENTIAL DIFFERENT THEME, MORE HEAVENLY FUTURE STYLE */
+/* #fantasy-gameboard .square.light {
+  background-color: #f7f0d8;
+  background-image:
+    radial-gradient(circle at 60% 40%, #fff8e1 20%, transparent 80%);
+  box-shadow:
+    inset 0 0 6px 2px rgba(255, 255, 200, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+#fantasy-gameboard .square.dark {
+  background-color: #d5e8f9;
+  background-image:
+    radial-gradient(circle at 40% 60%, #e9f2ff 25%, transparent 80%);
+  box-shadow:
+    inset 0 0 7px 2px rgba(180, 220, 255, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+} */
+
 #fantasy-gameboard .square.water {
   position: relative;
+  z-index: 2;
   background: linear-gradient(135deg, #005599 0%, #3399ff 60%, #66b2ff 100%);
   box-shadow:
     inset 0 0 20px 4px rgba(51, 153, 255, 0.7),
@@ -219,6 +241,111 @@ body.fantasy-mode.cursor-reset * {
   border-radius: 8px;
   overflow: visible;
   border: 1.5px solid rgba(102, 178, 255, 0.7);
+}
+
+.fantasy-piece.drown-animation {
+  animation: drown 0.5s ease-out forwards;
+}
+
+@keyframes drown {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(20px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+#fantasy-gameboard .square.lava {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(135deg, #ff4500 0%, #ff7518 60%, #ffaa00 100%);
+  box-shadow:
+    inset 0 0 20px 5px rgba(255, 80, 0, 0.75),
+    0 0 14px 6px rgba(255, 140, 0, 0.8);
+  border-radius: 8px;
+  overflow: visible;
+  border: 1.5px solid rgba(255, 120, 0, 0.8);
+}
+
+.fantasy-piece.burn-animation {
+  animation: burn-flicker 0.6s ease-in-out forwards;
+  z-index: 10; 
+}
+
+@keyframes burn-flicker {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow:
+      0 0 12px 4px rgba(255, 80, 0, 0.7),
+      0 0 28px 10px rgba(255, 40, 0, 0.5),
+      inset 0 0 10px 3px rgba(255, 120, 0, 0.5);
+  }
+
+  25% {
+    transform: scale(1.06);
+    filter: brightness(1.4);
+    box-shadow:
+      0 0 20px 8px rgba(255, 140, 0, 0.9),
+      0 0 40px 16px rgba(255, 90, 0, 0.6),
+      inset 0 0 14px 5px rgba(255, 180, 50, 0.6);
+  }
+
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+    box-shadow:
+      0 0 16px 6px rgba(255, 100, 0, 0.8),
+      0 0 30px 12px rgba(255, 60, 0, 0.5),
+      inset 0 0 12px 4px rgba(255, 160, 30, 0.5);
+  }
+
+  75% {
+    transform: scale(1.08);
+    filter: brightness(1.5);
+    box-shadow:
+      0 0 26px 10px rgba(255, 180, 0, 1),
+      0 0 50px 20px rgba(255, 100, 0, 0.8),
+      inset 0 0 18px 6px rgba(255, 220, 80, 0.7);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow:
+      0 0 12px 4px rgba(255, 80, 0, 0.7),
+      0 0 28px 10px rgba(255, 40, 0, 0.5),
+      inset 0 0 10px 3px rgba(255, 120, 0, 0.5);
+  }
+}
+
+#fantasy-gameboard .square.magic {
+  position: relative;
+  z-index: 3;
+  background: linear-gradient(135deg, #d1b3ff 0%, #a473ff 60%, #8035e9 100%);
+  box-shadow:
+    inset 0 0 18px 6px rgba(180, 120, 255, 0.4),
+    0 0 14px 6px rgba(200, 160, 255, 0.7);
+  border-radius: 8px;
+  border: 2px solid rgba(230, 200, 255, 0.5);
+  animation: arcanePulse 1.5s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes arcanePulse {
+  0% {
+    box-shadow:
+      inset 0 0 14px 4px rgba(180, 120, 255, 0.35),
+      0 0 8px 4px rgba(220, 180, 255, 0.5);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 22px 8px rgba(200, 140, 255, 0.5),
+      0 0 18px 10px rgba(255, 220, 255, 0.75);
+  }
 }
 
 @keyframes sparkleLight {
@@ -435,12 +562,12 @@ body::before {
 
 #fantasy-gameboard .square.last-move-from {
   box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
-  z-index: 2;
+  z-index: 3;
 }
 
 #fantasy-gameboard .square.last-move-to {
   box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
-  z-index: 2;
+  z-index: 3;
 }
 
 path {
@@ -507,24 +634,126 @@ path {
 @keyframes glow-pulse {
   0% {
     box-shadow:
-      0 0 12px 4px rgba(255, 255, 120, 0.7),
-      0 0 28px 10px rgba(255, 255, 160, 0.4),
-      inset 0 0 8px 3px rgba(255, 255, 200, 0.3);
+      0 0 8px 3px rgba(255, 255, 140, 0.5),
+      0 0 20px 8px rgba(255, 255, 180, 0.3),
+      inset 0 0 6px 3px rgba(255, 255, 210, 0.2);
     transform: scale(1);
   }
   50% {
     box-shadow:
-      0 0 20px 8px rgba(255, 255, 170, 0.95),
-      0 0 45px 18px rgba(255, 255, 210, 0.6),
-      inset 0 0 14px 6px rgba(255, 255, 230, 0.5);
-    transform: scale(1.050);
+      0 0 14px 6px rgba(255, 255, 180, 0.65),
+      0 0 28px 12px rgba(255, 255, 220, 0.4),
+      inset 0 0 10px 5px rgba(255, 255, 240, 0.3);
+    transform: scale(1.035);
   }
   100% {
     box-shadow:
-      0 0 14px 5px rgba(255, 255, 130, 0.8),
-      0 0 35px 12px rgba(255, 255, 180, 0.5),
-      inset 0 0 10px 4px rgba(255, 255, 210, 0.4);
+      0 0 8px 3px rgba(255, 255, 140, 0.5),
+      0 0 20px 8px rgba(255, 255, 180, 0.3),
+      inset 0 0 6px 3px rgba(255, 255, 210, 0.2);
     transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.evolving-effect {
+  animation: evolve-glow 0.5s ease-out;
+  box-shadow: 0 0 12px 6px rgba(0, 200, 255, 0.7), inset 0 0 6px rgba(0, 255, 255, 0.4);
+}
+
+@keyframes evolve-glow {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0px rgba(0, 200, 255, 0);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px 8px rgba(0, 200, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(0, 200, 255, 0);
+  }
+}
+
+#fantasy-gameboard .square.lightUltimate {
+  position: relative;
+  z-index: 3;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 20px 8px rgba(255, 255, 230, 0.6),
+    0 0 40px 16px rgba(255, 255, 255, 0.4),
+    0 0 60px 30px rgba(255, 255, 255, 0.25),
+    inset 0 0 15px 6px rgba(255, 255, 255, 0.3),
+    inset 0 0 20px 10px rgba(255, 255, 255, 0.4);
+  animation: divine-explosion 1.6s infinite ease-in-out alternate,
+             pulse-ultimate 2s infinite ease-in-out;
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.shadowUltimate {
+  position: relative;
+  z-index: 3;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 75%);
+  border-radius: 8px;
+  border: 2px solid rgba(30, 0, 50, 0.9);
+  box-shadow:
+    0 0 20px 8px rgba(50, 0, 90, 0.6),
+    0 0 40px 20px rgba(30, 0, 60, 0.5),
+    0 0 80px 35px rgba(10, 0, 30, 0.4),
+    inset 0 0 25px 12px rgba(40, 0, 70, 0.85),
+    inset 0 0 50px 25px rgba(0, 0, 0, 1);
+  animation: shadow-explosion 1.9s infinite ease-in-out alternate,
+             pulse-ultimate 2.4s infinite ease-in-out;
+  overflow: visible;
+}
+
+@keyframes divine-explosion {
+  0% {
+    box-shadow:
+      0 0 20px 6px rgba(255, 255, 180, 0.6),
+      0 0 45px 18px rgba(255, 255, 220, 0.5),
+      0 0 70px 30px rgba(255, 255, 255, 0.5),
+      inset 0 0 15px 6px rgba(255, 255, 200, 0.65),
+      inset 0 0 30px 15px rgba(255, 255, 255, 0.95);
+  }
+  100% {
+    box-shadow:
+      0 0 35px 12px rgba(255, 255, 230, 0.6),
+      0 0 70px 30px rgba(255, 255, 255, 0.5),
+      0 0 120px 60px rgba(255, 255, 255, 0.5),
+      inset 0 0 30px 15px rgba(255, 255, 255, 0.75),
+      inset 0 0 50px 25px rgba(255, 255, 255, 0.95);
+  }
+}
+
+@keyframes shadow-explosion {
+  0% {
+    box-shadow:
+      0 0 15px 6px rgba(80, 0, 130, 0.6),
+      0 0 40px 18px rgba(50, 0, 90, 0.5),
+      0 0 70px 30px rgba(30, 0, 60, 0.4),
+      inset 0 0 10px 4px rgba(60, 0, 80, 0.6),
+      inset 0 0 25px 10px rgba(0, 0, 0, 0.8);
+  }
+  100% {
+    box-shadow:
+      0 0 25px 10px rgba(100, 0, 150, 0.7),
+      0 0 60px 25px rgba(60, 0, 100, 0.6),
+      0 0 100px 40px rgba(40, 0, 70, 0.5),
+      inset 0 0 20px 10px rgba(80, 0, 110, 0.8),
+      inset 0 0 35px 18px rgba(0, 0, 0, 1);
+  }
+}
+
+@keyframes pulse-ultimate {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
   }
 }
 
@@ -555,7 +784,6 @@ path {
   }
 }
 
-
 /* .beige {
     background-color: rgb(110, 110, 98);
 }
@@ -577,12 +805,26 @@ path {
 #fantasy-gameboard .black {
   fill: #000000; /* jet black */
   filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.3)); /* subtle black glow */
+  position: relative;
+  z-index: 3;
 }
 
 #fantasy-gameboard .white {
   fill: #f8f4e3; /* creamy white */
   filter: drop-shadow(0 0 1.5px rgba(255, 255, 240, 0.3)); /* subtle white glow */
+  position: relative;
+  z-index: 3;
+}
 
+/* adds subtle black border for visibility */
+.outline-white svg path,
+.outline-white svg circle,
+.outline-white svg rect,
+.outline-white svg polygon,
+.outline-white svg ellipse {
+  stroke: black;
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
 }
 
 @keyframes flash-shake-glow {
@@ -628,7 +870,7 @@ path {
 
 #fantasy-gameboard .square.invalid-move {
   animation: flash-shake-glow 0.4s ease;
-  z-index: 2;
+  z-index: 3;
 }
 
 #mode-selection {
@@ -692,6 +934,40 @@ path {
   color: white;
   box-shadow: 0 0 12px 3px #5a3e9e;
   transform: scale(0.98);
+}
+
+/* PASSIVE RELATED CSS */
+
+/* EVASION */
+#fantasy-gameboard .square.evasion-glow {
+  animation: teleportRipple 0.95s ease-out;
+  border-radius: 8px;
+  z-index: 2;
+  position: relative;
+}
+
+@keyframes teleportRipple {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(100, 200, 255, 0.7),
+      0 0 0 0 rgba(150, 250, 255, 0.4);
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    box-shadow:
+      0 0 40px 20px rgba(100, 200, 255, 0.5),
+      0 0 60px 30px rgba(150, 250, 255, 0.3);
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    box-shadow:
+      0 0 80px 40px rgba(100, 200, 255, 0),
+      0 0 100px 50px rgba(150, 250, 255, 0);
+    transform: scale(1);
+    opacity: 0.7;
+  }
 }
 
 /* ALL ABILITY RELATED CSS */
@@ -815,6 +1091,87 @@ path {
   }
 }
 
+/* FOR PHOENIX */
+#fantasy-gameboard .square.lava-burst {
+  animation: lava-burst 0.9s ease-in-out, lava-shake 0.3s ease-in-out 0.1s;
+  z-index: 3;
+}
+
+@keyframes lava-burst {
+  0% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 12px 4px rgba(255, 100, 0, 0.6),
+      0 0 20px 8px rgba(255, 60, 0, 0.4);
+    background-color: rgba(255, 80, 0, 0.15);
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 16px 6px rgba(255, 120, 0, 0.7),
+      0 0 28px 12px rgba(255, 80, 0, 0.5);
+    background-color: rgba(255, 100, 0, 0.25);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px 3px rgba(255, 80, 0, 0.5),
+      0 0 16px 6px rgba(255, 50, 0, 0.3);
+    background-color: rgba(255, 70, 0, 0.1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes lava-shake {
+  0% { transform: translate(0px, 0px); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 2px); }
+  75% { transform: translate(2px, 1px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+.fantasy-piece.phoenix-rebirth {
+  animation: phoenixRebirth 0.6s ease-in-out;
+  z-index: 3;
+  filter: brightness(1.8) drop-shadow(0 0 8px rgba(255, 120, 0, 0.8));
+  opacity: 0;
+  transform-origin: center;
+}
+
+@keyframes phoenixRebirth {
+  0% {
+    transform: scale(0.5) translateY(20px) rotate(-10deg);
+    opacity: 0;
+    filter: brightness(1) blur(2px);
+  }
+
+  30% {
+    transform: scale(1.1) translateY(-10px) rotate(5deg);
+    opacity: 0.6;
+    filter: brightness(2) drop-shadow(0 0 12px rgba(255, 100, 0, 0.7));
+  }
+
+  60% {
+    transform: scale(1.2) translateY(-20px) rotate(-3deg);
+    opacity: 1;
+    filter: brightness(2.5) drop-shadow(0 0 20px rgba(255, 160, 0, 1));
+  }
+
+  85% {
+    transform: scale(1.05) translateY(-10px) rotate(2deg);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 10px rgba(255, 120, 0, 0.8));
+  }
+
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1.3) drop-shadow(0 0 6px rgba(255, 80, 0, 0.6));
+  }
+}
+
 /* FOR FISH */
 #fantasy-gameboard .fish-teleport {
   animation: splash 0.6s ease-out;
@@ -859,6 +1216,634 @@ path {
   100% {
     box-shadow: 0 0 4px 2px limegreen;
     transform: scale(1);
+  }
+}
+
+/* FOR CROCODILE */
+#fantasy-gameboard .square.swamp-portal {
+  background: radial-gradient(circle at center, #335533 30%, #222 70%, transparent 100%);
+  animation: swampRipple 1.2s infinite ease-in-out;
+  border: 2px dashed #88cc88;
+  z-index: 3;
+}
+
+@keyframes swampRipple {
+  0% {
+    box-shadow: 0 0 10px 3px rgba(50, 150, 100, 0.3);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(50, 200, 150, 0.6);
+    filter: brightness(1.2);
+  }
+  100% {
+    box-shadow: 0 0 10px 3px rgba(50, 150, 100, 0.3);
+    filter: brightness(1);
+  }
+}
+
+#fantasy-gameboard .square.swamp-teleport {
+  position: relative;
+  z-index: 3;
+  animation: portalPulse 1.6s ease-out forwards;
+  transform-origin: center center;
+}
+
+@keyframes portalPulse {
+  0% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 0 0px 0px rgba(180, 0, 255, 0),
+      inset 0 0 0px 0px rgba(255, 100, 200, 0);
+    background-color: rgba(120, 0, 120, 0.1);
+  }
+  30% {
+    transform: scale(1.05) rotate(120deg);
+    box-shadow: 
+      0 0 20px 8px rgba(200, 0, 255, 0.5),
+      inset 0 0 10px 4px rgba(255, 100, 200, 0.4);
+    background-color: rgba(150, 50, 200, 0.2);
+  }
+  60% {
+    transform: scale(1.1) rotate(240deg);
+    box-shadow: 
+      0 0 36px 16px rgba(220, 80, 255, 0.7),
+      inset 0 0 20px 10px rgba(255, 150, 220, 0.5);
+    background-color: rgba(200, 100, 255, 0.3);
+  }
+  100% {
+    transform: scale(1.05) rotate(360deg);
+    box-shadow: 
+      0 0 18px 10px rgba(180, 0, 200, 0.3),
+      inset 0 0 10px 6px rgba(255, 80, 200, 0.2);
+    background-color: rgba(140, 40, 180, 0.15);
+  }
+}
+
+/* FOR GRYPHON */
+#fantasy-gameboard .square.gryphon-targetable {
+    position: relative;
+    outline: 2px solid gold;
+    box-shadow: 0 0 10px 4px rgba(255, 215, 0, 0.7), inset 0 0 6px 2px rgba(255, 223, 0, 0.9);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: crosshair;
+    z-index: 3;
+}
+
+#fantasy-gameboard .square.gryphon-hit {
+  box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.9);
+  animation: gryphon-pulse 0.7s ease-out;
+  z-index: 4;
+  position: relative;
+  transition: transform 0.2s ease-out;
+}
+
+@keyframes gryphon-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 230, 0, 1);
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 18px 12px rgba(255, 0, 0, 0.7);
+    transform: scale(1.1);
+  }
+  60% {
+    box-shadow: 0 0 28px 20px rgba(255, 60, 0, 0.9);
+    transform: scale(1.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.gryphon-hit::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  background: url('graphics/talon_claw.png') center/contain no-repeat;
+  transform: translate(-50%, -50%) scale(1);
+  animation: claw-impact 0.4s ease-out;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 1;
+}
+
+@keyframes claw-impact {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+    opacity: 1;
+    filter: brightness(2) saturate(1.5);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6) rotate(-10deg);
+    opacity: 0;
+  }
+}
+
+/* FOR HAMSA */
+#fantasy-gameboard .square.hamsa-spin {
+  animation: shuffleSpin 0.6s ease-in-out;
+  transform-origin: center center;
+  z-index: 10;
+}
+
+@keyframes shuffleSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* FOR JEDI */
+#fantasy-gameboard .square.force-push {
+  position: relative;
+  z-index: 2;
+  animation: forcePushShock 0.5s ease-out;
+  overflow: visible;
+}
+
+.fantasy-piece.force-push {
+  animation: forcePushPulse 0.5s ease-out;
+}
+
+@keyframes forcePushShock {
+  0% {
+    box-shadow: 
+      0 0 20px 6px rgba(100, 255, 255, 0.9),
+      inset 0 0 14px rgba(0, 255, 255, 0.8);
+    background-color: rgba(0, 255, 255, 0.1);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: none;
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes forcePushPulse {
+  0% {
+    transform: translateY(-3px) scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8));
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+/* FOR SITH */
+#fantasy-gameboard .square.dark-conversion {
+  position: relative;
+  z-index: 2;
+  animation: darkConversionShock 0.8s ease-in-out;
+  box-shadow:
+    0 0 14px 4px rgba(120, 0, 120, 0.6),
+    inset 0 0 20px 6px rgba(50, 0, 100, 0.5),
+    0 0 50px 20px rgba(160, 0, 180, 0.3);
+  background: radial-gradient(circle, rgba(80, 0, 120, 0.1) 0%, transparent 70%);
+  border: 2px solid rgba(200, 0, 200, 0.4);
+}
+
+@keyframes darkConversionShock {
+  0% {
+    transform: scale(1);
+    filter: brightness(0.9) saturate(0.8);
+    box-shadow: 
+      0 0 6px 2px rgba(255, 0, 0, 0.4),
+      inset 0 0 10px 3px rgba(100, 0, 100, 0.3);
+  }
+  30% {
+    transform: scale(1.1) rotate(0.5deg);
+    filter: brightness(1.1) saturate(1.3);
+    box-shadow: 
+      0 0 20px 10px rgba(180, 0, 180, 0.6),
+      inset 0 0 25px 10px rgba(150, 0, 200, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+    box-shadow:
+      0 0 14px 4px rgba(120, 0, 120, 0.6),
+      inset 0 0 20px 6px rgba(50, 0, 100, 0.5);
+  }
+}
+
+/* FOR JESTER */
+#fantasy-gameboard .square.jester-swap {
+  animation: jester-flash 1.2s ease-in-out;
+  z-index: 3;
+}
+
+@keyframes jester-flash {
+  0%, 100% {
+    box-shadow: 0 0 10px 3px #ff00ffaa;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px 6px #ff00ffaa;
+    transform: scale(1.05);
+  }
+}
+
+/* FOR JOKER */
+#fantasy-gameboard .square.joker-swap {
+  animation: joker-glitch 0.9s ease-in-out;
+  z-index: 5;
+  position: relative;
+}
+
+@keyframes joker-glitch {
+  0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg) brightness(1); opacity: 1; }
+  20% { transform: rotate(15deg) scale(0.9); filter: hue-rotate(60deg) brightness(1.2); opacity: 0.8; }
+  40% { transform: rotate(-10deg) scale(1.2); filter: hue-rotate(120deg) brightness(1.5); opacity: 0.6; }
+  60% { transform: rotate(25deg) scale(0.95); filter: hue-rotate(180deg) brightness(1); opacity: 0.85; }
+  80% { transform: rotate(-15deg) scale(1.1); filter: hue-rotate(300deg) brightness(0.8); opacity: 1; }
+  100% { transform: rotate(0deg) scale(1); filter: hue-rotate(360deg) brightness(1); opacity: 1; }
+}
+
+#fantasy-gameboard .square.joker-swap::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  box-shadow:
+    0 0 12px 4px rgba(128, 0, 128, 0.7),
+    0 0 20px 6px rgba(0, 255, 0, 0.4);
+  border-radius: 8px;
+  animation: joker-fade-glow 0.9s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes joker-fade-glow {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* FOR KHANDA */
+.fantasy-piece.khanda-strike {
+  animation: khandaFlash 0.9s ease-out;
+  filter: drop-shadow(0 0 8px crimson);
+}
+
+@keyframes khandaFlash {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+
+#fantasy-gameboard .square.khanda-glow {
+  position: relative;
+  z-index: 2;
+  animation: balanceFlash 1.2s ease-in-out;
+  box-shadow:
+    0 0 12px 6px rgba(255, 240, 160, 0.7),
+    0 0 24px 12px rgba(255, 210, 100, 0.5),
+    inset 0 0 14px 6px rgba(255, 220, 120, 0.5);
+  border-radius: 8px;
+}
+
+@keyframes balanceFlash {
+  0% {
+    box-shadow: none;
+    opacity: 1;
+  }
+  30% {
+    box-shadow:
+      0 0 18px 8px rgba(255, 240, 160, 0.9),
+      0 0 28px 14px rgba(255, 220, 120, 0.7),
+      inset 0 0 18px 8px rgba(255, 230, 150, 0.6);
+  }
+  100% {
+    box-shadow: none;
+    opacity: 1;
+  }
+}
+
+/* FOR ZULFIQAR */
+#fantasy-gameboard .square.zulfiqar-split {
+  animation: zulfiqarSplitGlow 1.2s ease-in-out forwards, zulfiqarCrackle 1.2s infinite alternate;
+  box-shadow:
+    0 0 18px 6px rgba(255, 255, 210, 0.95),
+    0 0 40px 18px rgba(255, 255, 180, 0.8),
+    inset 0 0 18px 6px rgba(255, 255, 230, 0.7);
+  background: radial-gradient(circle, rgba(255,255,230,0.4) 25%, rgba(255,255,255,0.05) 75%);
+  position: relative;
+  border-radius: 8px;
+  z-index: 3;
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::after,
+#fantasy-gameboard .square.zulfiqar-split::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0) 47%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 53%
+  );
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::after {
+  transform: scale(0.9) rotate(0deg);
+  animation: zulfiqarArc1 0.6s ease-out;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::before {
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 47%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 53%
+  );
+  transform: scale(0.9) rotate(0deg);
+  animation: zulfiqarArc2 0.6s ease-out 0.15s;
+}
+
+@keyframes zulfiqarArc1 {
+  0%   { opacity: 0; transform: scale(0.8) rotate(0deg); }
+  30%  { opacity: 1; transform: scale(1.1) rotate(10deg); }
+  100% { opacity: 0; transform: scale(1.2) rotate(20deg); }
+}
+
+@keyframes zulfiqarArc2 {
+  0%   { opacity: 0; transform: scale(0.8) rotate(0deg); }
+  30%  { opacity: 1; transform: scale(1.1) rotate(-10deg); }
+  100% { opacity: 0; transform: scale(1.2) rotate(-20deg); }
+}
+
+@keyframes zulfiqarSplitGlow {
+  0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+  50% { transform: scale(1.08); opacity: 0.85; filter: brightness(1.3); }
+  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes zulfiqarCrackle {
+  0%   { filter: drop-shadow(0 0 4px rgba(255, 255, 180, 0.3)); }
+  100% { filter: drop-shadow(0 0 8px rgba(255, 255, 230, 0.6)) contrast(1.1); }
+}
+
+/* FOR OTTER */
+.fantasy-piece.otter-evasion {
+  animation: evasionEscape 0.6s ease-in-out;
+  z-index: 3;
+  filter: blur(1px) brightness(1.3);
+  opacity: 0.85;
+}
+
+@keyframes evasionEscape {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-4px, -2px) rotate(-2deg);
+  }
+  40% {
+    transform: translate(6px, 2px) rotate(3deg);
+  }
+  60% {
+    transform: translate(-8px, -3px) rotate(-4deg);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(10px, 4px) rotate(2deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.6;
+  }
+}
+
+#fantasy-gameboard .square.enhancing-otter {
+  position: relative;
+  z-index: 2;
+  border-radius: 12px;
+  animation: pulse-glow-blue 1.2s infinite ease-in-out;
+  filter: drop-shadow(0 0 6px #66ccff) drop-shadow(0 0 12px #66ccff);
+}
+
+@keyframes pulse-glow-blue {
+  0% {
+    box-shadow: 0 0 4px 2px #66ccff;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 8px #66ccff;
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 4px 2px #66ccff;
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.water-upgrade {
+  animation: waterUpgradeFlash 1s ease-out;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 6px rgba(100, 200, 255, 0.6)) drop-shadow(0 0 12px rgba(100, 200, 255, 0.8));
+}
+
+@keyframes waterUpgradeFlash {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(100, 200, 255, 0);
+    opacity: 0.8;
+  }
+  30% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px 6px rgba(100, 200, 255, 0.6);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px 10px rgba(100, 200, 255, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(100, 200, 255, 0);
+    opacity: 1;
+  }
+}
+
+/* FOR GUITAR */
+#fantasy-gameboard .square.encore-cast {
+  animation: encore-glow 0.8s ease-in-out;
+  z-index: 5;
+  border-radius: 6px;
+  position: relative;
+}
+
+#fantasy-gameboard .square.encore-cast::before {
+  content: "🎵";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  font-size: 1.4rem;
+  opacity: 0;
+  animation: note-float 0.9s ease-out forwards;
+  pointer-events: none;
+  z-index: 6;
+}
+
+@keyframes encore-glow {
+  0% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 8px rgba(255, 215, 0, 0.75);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.0);
+    transform: scale(1);
+  }
+}
+
+@keyframes note-float {
+  0% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-20px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* FOR VIOLIN */
+#fantasy-gameboard .square.aria-cast {
+  animation: aria-flare 0.6s ease-in-out;
+  z-index: 3;
+}
+
+@keyframes aria-flare {
+  0% { box-shadow: 0 0 10px 5px rgba(255, 150, 255, 0.5); transform: scale(1); }
+  100% { box-shadow: 0 0 30px 15px rgba(255, 200, 255, 0.8); transform: scale(1.1); }
+}
+
+#fantasy-gameboard .square.musical-cone-hit {
+  position: relative;
+  border: 2px solid #FFC107; 
+  border-radius: 8px;
+  background: radial-gradient(circle at center, #FFF3E0, #FFECB3 80%);
+  animation: musicalPulse 0.8s ease-in-out forwards;
+  box-shadow:
+    0 0 8px 3px #FFD54F,
+    inset 0 0 10px 3px #FFF8E1;
+  overflow: visible;
+  z-index: 0;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::before,
+#fantasy-gameboard .square.musical-cone-hit::after {
+  content: "♪";
+  position: absolute;
+  font-size: 18px;
+  color: #FFB300;
+  opacity: 0.7;
+  animation: floatNotes 2.5s linear forwards;
+  pointer-events: none;
+  user-select: none;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::before {
+  left: 10%;
+  top: 30%;
+  animation-delay: 0s;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::after {
+  right: 15%;
+  top: 50%;
+  font-size: 14px;
+  animation-delay: 0.3s;
+  color: #FFA000;
+}
+
+@keyframes musicalPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px 3px #FFD54F,
+      inset 0 0 10px 3px #FFF8E1;
+  }
+  50% {
+    box-shadow:
+      0 0 18px 6px #FFCA28,
+      inset 0 0 18px 6px #FFF3E0;
+  }
+}
+
+@keyframes floatNotes {
+  0% {
+    opacity: 0.7;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-10px) rotate(10deg);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+#fantasy-gameboard .fantasy-piece.musical-death {
+  animation: musicalDeath 1s ease-out forwards;
+  transform-origin: center;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 1;
+}
+
+@keyframes musicalDeath {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.2) rotate(5deg);
+    filter: brightness(2);
+  }
+  50% {
+    transform: scale(0.9) rotate(-3deg);
+    filter: brightness(1.2);
+  }
+  70% {
+    opacity: 0.6;
+    transform: scale(1.5) rotate(15deg);
+    filter: contrast(1.5) blur(1px);
+  }
+  100% {
+    transform: scale(0.5) rotate(-25deg) translateY(-20px);
+    opacity: 0;
+    filter: blur(4px);
   }
 }
 
@@ -968,6 +1953,77 @@ body.shake {
   animation: screenShake 0.4s;
 }
 
+/* FOR PRIEST */
+.fantasy-piece.divine-shield {
+  position: relative;
+  z-index: 3;
+  box-shadow: inset 0 0 8px rgba(255, 255, 150, 0.6),
+              inset 0 0 4px rgba(255, 255, 200, 0.4);
+}
+
+.fantasy-piece.divine-shield::after {
+  content: '🛡️';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.2rem;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#fantasy-gameboard .square.shield-block {
+  animation: shieldFlash 0.6s ease-out;
+  z-index: 5;
+  position: relative;
+}
+
+@keyframes shieldFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 120, 0);
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 18px 12px rgba(255, 255, 150, 0.9);
+    transform: scale(1.08);
+  }
+  50% {
+    box-shadow: 0 0 28px 18px rgba(255, 255, 255, 0.95);
+    transform: scale(1.12);
+  }
+  80% {
+    box-shadow: 0 0 14px 8px rgba(255, 255, 160, 0.6);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 120, 0);
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.divine-upgrade {
+  position: relative;
+  z-index: 2;
+  border-radius: 8px;
+  animation: upgradePulse 1.0s ease-out forwards;
+  box-shadow: none;
+}
+
+@keyframes upgradePulse {
+  0% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow:
+      0 0 20px 8px rgba(180, 230, 255, 0.9),
+      0 0 40px 16px rgba(150, 210, 255, 0.7);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+
 /* FOR KOI */
 #fantasy-gameboard .square.water-strike {
   position: relative;
@@ -1021,3 +2077,415 @@ body.shake {
     filter: brightness(1);
   }
 }
+
+/* FOR STAFFSNAKE + ALL EVOLUTION RELATED STYLING */
+.fantasy-piece.evolution-flare {
+  animation: evolveFlash 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 0 15px 8px rgba(0, 255, 180, 0.6),
+    0 0 40px 16px rgba(0, 255, 255, 0.3),
+    inset 0 0 12px 6px rgba(200, 255, 255, 0.4);
+  transform: scale(1.2);
+  z-index: 10;
+  border-radius: 12px;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+@keyframes evolveFlash {
+  0% {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.1;
+    box-shadow:
+      0 0 0px 0 rgba(0, 255, 180, 0),
+      0 0 0px 0 rgba(0, 255, 255, 0),
+      inset 0 0 0px 0 rgba(200, 255, 255, 0);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.4) rotate(6deg);
+    opacity: 1;
+    box-shadow:
+      0 0 25px 14px rgba(0, 255, 180, 0.8),
+      0 0 60px 30px rgba(0, 255, 255, 0.4),
+      inset 0 0 20px 8px rgba(255, 255, 255, 0.4);
+    filter: hue-rotate(15deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    box-shadow:
+      0 0 6px 2px rgba(0, 255, 180, 0.4),
+      0 0 20px 8px rgba(0, 255, 255, 0.2),
+      inset 0 0 8px 4px rgba(255, 255, 255, 0.2);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* FOR KRAKEN */
+.fantasy-piece.devolve-flare {
+  animation: devolveFade 0.7s ease-out;
+  box-shadow:
+    0 0 12px 6px rgba(180, 0, 0, 0.5),
+    inset 0 0 14px 6px rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  z-index: 10;
+}
+
+@keyframes devolveFade {
+  0% {
+    transform: scale(1.4) rotate(0deg);
+    opacity: 0.2;
+    box-shadow:
+      0 0 30px 15px rgba(255, 0, 0, 0.5),
+      inset 0 0 0px 0 rgba(0, 0, 0, 0);
+    filter: hue-rotate(0deg) brightness(1.3);
+  }
+  40% {
+    transform: scale(0.85) rotate(6deg);
+    opacity: 1;
+    box-shadow:
+      0 0 20px 10px rgba(100, 0, 0, 0.7),
+      inset 0 0 20px 10px rgba(0, 0, 0, 0.9);
+    filter: hue-rotate(-20deg) brightness(0.8);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    box-shadow:
+      0 0 6px 3px rgba(80, 0, 0, 0.5),
+      inset 0 0 10px 4px rgba(0, 0, 0, 0.8);
+    filter: brightness(0.9);
+  }
+}
+
+/* FOR TORNADO */
+.fantasy-piece.tornado-fling {
+  animation: tornadoSpin 1.5s ease-in-out;
+}
+
+@keyframes tornadoSpin {
+  0% { transform: rotate(0deg) scale(1); opacity: 1; }
+  50% { transform: rotate(720deg) scale(1.3); opacity: 0.7; }
+  100% { transform: rotate(1080deg) scale(1); opacity: 1; }
+}
+
+#fantasy-gameboard .square.tornado-zone {
+  position: relative;
+  overflow: visible;
+  background: radial-gradient(circle, rgba(210, 240, 255, 0.15) 30%, transparent 70%);
+  z-index: 2;
+}
+
+#fantasy-gameboard .square.tornado-zone::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  height: 160%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(180, 220, 255, 0.12) 0%, transparent 80%);
+  background-image: repeating-conic-gradient(
+    rgba(170, 210, 255, 0.15) 0deg 15deg,
+    transparent 15deg 30deg
+  );
+  border-radius: 50%;
+  animation: spiralSpin 1.5s linear forwards;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.75;
+  mix-blend-mode: lighten;
+}
+
+@keyframes spiralSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* FOR THUNDER */
+#fantasy-gameboard .square.lightning-strike {
+  position: relative;
+  z-index: 2;
+  animation: lightningFlash 0.5s ease;
+  box-shadow: 0 0 20px 10px rgba(255, 255, 100, 0.8);
+  background-color: rgba(255, 255, 150, 0.3);
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.lightning-strike::after {
+  content: '⚡';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.6);
+  font-size: 28px;
+  color: rgba(255, 255, 100, 0.9);
+  text-shadow:
+    0 0 10px rgba(255, 255, 150, 0.9),
+    0 0 20px rgba(255, 255, 255, 0.8);
+  animation: boltFlash 0.5s ease forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes lightningFlash {
+  0%   { background-color: rgba(255, 255, 200, 0.5); }
+  50%  { background-color: rgba(255, 255, 255, 0.9); }
+  100% { background-color: transparent; }
+}
+
+@keyframes boltFlash {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+
+#fantasy-gameboard .square.eye-of-storm {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  background: radial-gradient(circle at center,
+    rgba(220, 240, 255, 0.2),
+    transparent 80%
+  );
+  box-shadow:
+    inset 0 0 10px 2px rgba(255, 255, 255, 0.2),
+    0 0 14px 4px rgba(160, 210, 255, 0.25);
+}
+
+/* FOR VIKING */
+#fantasy-gameboard .square.frost-smash {
+  animation: frostExplosion 0.5s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(210, 240, 255, 0.7), rgba(120, 180, 255, 0.3), transparent 80%);
+  box-shadow:
+    0 0 20px 8px rgba(150, 220, 255, 0.9),
+    0 0 40px 16px rgba(180, 240, 255, 0.6),
+    inset 0 0 15px rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 5;
+  filter: blur(0.2px) saturate(1.2);
+}
+
+@keyframes frostExplosion {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 3px #e0f7ff);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 12px #b5ebff) blur(1px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+    filter: drop-shadow(0 0 5px #aeeeff);
+  }
+}
+
+/* FOR MACE */
+#fantasy-gameboard .square.mace-hit {
+  position: relative;
+  z-index: 3;
+  animation: mace-glow-fade 1s ease-out;
+}
+
+#fantasy-gameboard .square.mace-hit::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 100, 0.7) 0%, rgba(255, 100, 0, 0.2) 80%);
+  pointer-events: none;
+  animation: mace-explosion 0.5s ease-out;
+  z-index: 4;
+}
+
+@keyframes mace-glow-fade {
+  0%   { box-shadow: 0 0 30px 20px rgba(255, 215, 0, 0.9); }
+  50%  { box-shadow: 0 0 50px 25px rgba(255, 100, 0, 0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+@keyframes mace-explosion {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* FOR WITCH */
+#fantasy-gameboard .square.witch-highlight {
+  outline: 3px dashed violet;
+  animation: pulse-glow 1.2s infinite;
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .square.witch-highlight-destination {
+  outline: 3px dashed gold;
+  animation: pulse-glow 1.2s infinite;
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .square.hexshift-flash {
+  animation: magic-flare 0.5s ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(200, 0, 255, 0.5); }
+  50% { box-shadow: 0 0 12px 4px rgba(255, 0, 255, 0.8); }
+}
+
+@keyframes magic-flare {
+  0% { transform: scale(1); background-color: rgba(255, 200, 255, 0.4); }
+  50% { transform: scale(1.08); background-color: rgba(255, 100, 255, 0.5); }
+  100% { transform: scale(1); background-color: transparent; }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ULTIMATE CSS */
+
+/* REAPER KILLING ANIMATION */
+#fantasy-gameboard .square.reaper-strike {
+  position: relative;
+  animation: reaper-fade 0.5s forwards ease-out;
+  box-shadow:
+    0 0 10px 4px rgba(80, 0, 0, 0.6),
+    0 0 20px 8px rgba(0, 0, 0, 0.9),
+    inset 0 0 12px 6px rgba(50, 0, 0, 0.7);
+  background: radial-gradient(circle at center, rgba(30, 0, 0, 0.8), rgba(0, 0, 0, 0.95));
+  border-radius: 6px;
+  z-index: 10;
+  transition: filter 0.3s, transform 0.3s;
+}
+
+@keyframes reaper-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) contrast(1);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    filter: brightness(0.6) contrast(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-15deg);
+    filter: brightness(0.3) contrast(2);
+  }
+}
+
+/* ALIEN BEAM */
+#fantasy-gameboard .square.alien-beam {
+  animation: alienBeam 0.6s ease-in-out infinite alternate;
+  box-shadow: 
+    0 0 20px 6px rgba(0, 255, 170, 0.8),
+    0 0 40px 16px rgba(180, 0, 255, 0.7),
+    0 0 60px 24px rgba(0, 255, 170, 0.4),
+    inset 0 0 10px rgba(0, 255, 170, 0.9);
+  background: radial-gradient(circle at center, rgba(60, 255, 200, 0.4), rgba(30, 0, 60, 0.2));
+  position: relative;
+  z-index: 3;
+  backdrop-filter: blur(2px);
+}
+
+@keyframes alienBeam {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: hue-rotate(0deg) brightness(1.2) contrast(1);
+  }
+  25% {
+    transform: scale(1.15) rotate(1deg);
+    opacity: 1;
+    filter: hue-rotate(90deg) brightness(1.8) contrast(1.2);
+  }
+  50% {
+    transform: scale(1.25) rotate(-1deg);
+    opacity: 0.9;
+    filter: hue-rotate(180deg) brightness(2.5) contrast(1.5);
+  }
+  75% {
+    transform: scale(1.15) rotate(1deg);
+    opacity: 1;
+    filter: hue-rotate(270deg) brightness(1.8) contrast(1.2);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+    filter: hue-rotate(360deg) brightness(1.2) contrast(1);
+  }
+}
+
+#fantasy-gameboard .square.alien-beam::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(rgba(0, 255, 170, 0.5), transparent);
+  animation: pulseRing 1.2s infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* CHAOS VOID */
+#fantasy-gameboard .square.void-chaos {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.7); 
+  animation: voidPulse 1.2s ease-in-out forwards;
+  z-index: 99;
+  transition: background-color 1.2s ease;
+  border-radius: 8px;
+}
+
+@keyframes voidPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px 2px rgba(50, 0, 70, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(100, 0, 150, 0.8);
+  }
+}
+
+/* testing */

@@ -11,12 +11,11 @@ let playerTurn = "white"
 let gameOver = false
 let castlingMove = null
 let lastMove = { from: null, to: null }
-let canCastAbility = true;
-let canCastSpecialAbility = true;
 
 playerDisplay.textContent = 'white'
 
 let selectedPiece = null
+let captureDelay = 550;
 
 // castling logic
 let hasMoved = {
@@ -142,21 +141,41 @@ function createFantasyBoard() {
     }
 
     const waterSquares = getRandomWaterSquares(waterCount, min, max, excludedSquares);
+    const magicSquares = [0, 1, width - 1, width - 2, width * width - 1, width * width - 2, width * width - width, width * width - width + 1];
+    magicSquares.push(...excludedSquares);
 
-    // different game modes within fantasy, like medieval vs nature?
+    // different game modes within fantasy, like medieval vs nature? initial board set-up here
+    
+    // TEST BOARD 
+    
+    // const startPieces = [
+    //     fish, fish, guitar, jedi, wizard, staffSnake, priest, wizard, khanda, tornado, fish, fish,
+    //     bomb, gryphon, jester, pirate, pirate, otter, otter, pirate, pirate, jester, dragon, bomb,
+    //     pirate, viking, pirate, '', '', viking, viking, '', '', pirate, viking, pirate,
+    //     '', '', '', '', '', '', '', '', '', '', '', '',
+    //     '', frog, '', '', '', '', '', '', '', '', frog, '',
+    //     '', '', '', '', '', '', pirate, '', '', '', '', '',
+    //     '', '', '', '', '', pirate, '', '', '', '', '', '',
+    //     '', frog, '', phoenix, '', '', '', '', '', '', frog, '',
+    //     '', '', '', '', '', '', '', '', '', '', '', '',
+    //     '', '', '', '', '', '', pirate, '', '', '', '', '',
+    //     bomb, dragon, jester, pirate, pirate, otter, otter, pirate, pirate, jester, gryphon, bomb,
+    //     fish, fish, tornado, khanda, wizard, staffSnake, priest, wizard, jedi, guitar, fish, fish
+    // ]
+
     const startPieces = [
-        umbrella, thunder, dragon, staffSnake, wizard, tornado, bomb, guitar, priest, pirateKing, knight, rook,
-        pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
-        '', balloon, '', '', '', '', '', '', '', bomb, '', pope,
-        '', '', '', '', '', '', crocodile, '', koi, '', '', '',
-        '', frog, '', '', '', kraken, '', '', '', '', frog, '',
-        '', '', phoenix, '', '', '', '', '', '', '', '', '',
+        fish, fish, guitar, jedi, wizard, staffSnake, priest, wizard, khanda, tornado, fish, fish,
+        bomb, gryphon, jester, pirate, pirate, otter, otter, pirate, pirate, jester, dragon, bomb,
+        pirate, viking, pirate, '', '', viking, viking, '', '', pirate, viking, pirate,
         '', '', '', '', '', '', '', '', '', '', '', '',
-        '', frog, '', '', '', '', '', '', '', koi, frog, '',
-        '', gryphon, kraken, '', dynamite, '', '', '', '', '', '', '',
-        zulfiqar, '', '', '', '', bomb, '', '', violin, sith, '', hamsa,
-        pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate, pirate,
-        umbrella, otter, dragon, khanda, tornado, jedi, whale, queen, priest, fish, witch, umbrella
+        '', frog, '', '', '', '', '', '', '', '', frog, '',
+        '', '', '', '', '', '', pirate, '', '', '', '', '',
+        '', '', '', '', '', pirate, '', '', '', '', '', '',
+        '', frog, '', '', '', '', '', '', '', '', frog, '',
+        '', '', '', '', '', '', '', '', '', '', '', '',
+        pirate, viking, pirate, '', '', viking, viking, '', '', pirate, viking, pirate,
+        bomb, dragon, jester, pirate, pirate, otter, otter, pirate, pirate, jester, gryphon, bomb,
+        fish, fish, tornado, khanda, wizard, staffSnake, priest, wizard, jedi, guitar, fish, fish
     ]
 
     startPieces.forEach((startPiece, i) => {
@@ -166,10 +185,15 @@ function createFantasyBoard() {
         if (waterSquares.includes(i)) {
             square.classList.add('water');
         }
+        if (magicSquares.includes(i)) {
+            square.classList.add('magic');
+        }
 
         square.innerHTML = startPiece
         square.firstChild?.setAttribute('draggable', true) 
         square.setAttribute('square-id', i)
+        // square.setAttribute('static-square-id', i)
+
         const row = Math.floor(((width * width - 1) - i) / width) + 1
         
         if (row % 2 === 0) {
@@ -188,7 +212,7 @@ function createFantasyBoard() {
     })
 
     squareFunctionality()
-    updateEvolvedSquares()
+    updateSquares()
 
     if (playerTurn === 'white') {
         reverseIds()
@@ -226,8 +250,6 @@ function dragDrop(e) {
     const correctTurn = draggedElement.classList.contains(playerTurn)
     const valid = checkIfValid(draggedElement, fromSquare, toSquare)
     const targetPiece = toSquare.querySelector('.piece');
-    const startRow = getRow(startPositionId)
-    const endRow = getRow(Number(toSquare.getAttribute('square-id')))
     
     if (!correctTurn) {
         return;
@@ -255,6 +277,11 @@ function dragDrop(e) {
         toSquare.removeChild(captured);
         toSquare.appendChild(draggedElement);
 
+        runGameChecks(toSquare);
+        updateSquares();
+        changePlayer();
+        checkGameStatus();
+
     } else if (fantasyCaptured) {
 
         fantasyCaptured.classList.add('captured')
@@ -263,22 +290,62 @@ function dragDrop(e) {
             p.style.pointerEvents = 'none';
         });
 
+        if (!handleFantasyCapture(toSquare, fantasyCaptured)) {
+
+            fantasyCaptured.classList.remove('captured');
+
+            // adding the old piece back to its original square
+            fromSquare.appendChild(draggedElement);
+            
+            restoreInteraction();
+            updateSquares();
+
+            return;
+        }
+
+        if (fantasyCaptured.dataset.evasion === 'true') {
+            if (fantasyCaptured.id === 'phoenix' ) {
+                fantasyCaptured.classList.remove('captured');
+                handlePhoenixRebirth(fantasyCaptured, toSquare);
+            }
+            if (fantasyCaptured.id === 'otter' ) {
+                fantasyCaptured.classList.remove('captured');
+                handleOtterEvasion(fantasyCaptured, toSquare);
+            } 
+        }
+
         setTimeout(() => {
-            toSquare.removeChild(fantasyCaptured);
+
+            if (toSquare.contains(fantasyCaptured)) {
+                toSquare.removeChild(fantasyCaptured);
+            }
             toSquare.appendChild(draggedElement);
+            
+            restoreInteraction();
 
-            updateEvolvedSquares();
+            runGameChecks(toSquare);
+            updateSquares();
+            changePlayer();
+            checkGameStatus();
 
-            document.querySelectorAll('.fantasy-piece').forEach(p => {
-                p.style.pointerEvents = '';
-            });
-
-        }, 550);
+        }, captureDelay);
 
     } else {
         toSquare.appendChild(draggedElement);
-    }
 
+        runGameChecks(toSquare);
+        updateSquares();
+        changePlayer();
+        checkGameStatus();
+    }
+    
+}
+
+function runGameChecks(toSquare) {
+
+    const pieceType = draggedElement.id
+    const fromSquare = document.querySelector(`[square-id="${startPositionId}"]`);
+    const endRow = getRow(Number(toSquare.getAttribute('square-id')))
     const stillInCheck = isKingInCheck(playerTurn);
     
     if (stillInCheck) {
@@ -293,7 +360,10 @@ function dragDrop(e) {
         handlePawnPromotion(toSquare, playerTurn)
     }
     if (pieceType === 'pirate' && endRow === width - 1) {
-        handlePirateEvolution(toSquare, playerTurn)
+        handleFantasyEvolution(toSquare, playerTurn, draggedElement)
+    }
+    if (pieceType === 'viking' && endRow === width - 1) {
+        handleFantasyEvolution(toSquare, playerTurn, draggedElement)
     }
 
     if (draggedElement.id === 'king') {
@@ -320,10 +390,7 @@ function dragDrop(e) {
 
     fromSquare.classList.add('last-move-from');
     toSquare.classList.add('last-move-to');
-
-    updateEvolvedSquares();
-    changePlayer();
-    checkGameStatus();
+    draggedElement.dataset.moved = 'true';
 }
 
 function checkIfValid(piece, from, to) {
@@ -384,6 +451,7 @@ function checkIfValid(piece, from, to) {
             break;
         
         case 'knight':
+        case 'otter':
             const knightMoves = [
                 [-2, -1], [-2, 1],
                 [-1, -2], [-1, 2],
@@ -461,6 +529,7 @@ function checkIfValid(piece, from, to) {
             break;
 
         case 'rook':
+        case 'phoenix':
             const rookMoves = [
                 [-1, 0], 
                 [1, 0],  
@@ -501,9 +570,11 @@ function checkIfValid(piece, from, to) {
             break;
         
         case 'pirateKing':
+        case 'mace':
         case 'whale':
         case 'crocodile':
         case 'witch':
+        case 'violin':
         case 'queen':
             let queenMoves = [
                 [-1, -1],
@@ -637,6 +708,66 @@ function checkIfValid(piece, from, to) {
             }
 
             break;
+        
+        case 'viking':
+            const startVikingRow = getRow(startId);
+            const startVikingCol = getCol(startId);
+
+            let vikingMoves = [
+                [1, 0],    
+                [1, -1], 
+                [1, 1],   
+                [0, -1],
+                [0, 1], 
+            ];
+
+            for (const [rowDirection, colDirection] of vikingMoves) {
+                let row = startVikingRow;
+                let col = startVikingCol;
+
+                for (let i = 1; i <= 2; i++) {
+                    row += rowDirection;
+                    col += colDirection;
+
+                    if (row < 0 || row >= width || col < 0 || col >= width) break;
+
+                    const nextId = row * width + col;
+                    const square = document.querySelector(`[square-id="${nextId}"]`);
+                    const target = square.firstChild;
+
+                    if (nextId === targetId) {
+                        if (!target) {
+                            return true;
+
+                        } else {
+                            break; 
+
+                        }
+                    }
+
+                    if (target) break; // stop if something's in the way
+                }
+            }
+
+            for (let dx = -1; dx <= 1; dx++) {
+                let row = startVikingRow + 1;
+                let col = startVikingCol + dx;
+
+                if (row < 0 || row >= width || col < 0 || col >= width) return;
+
+                const captureId = row * width + col;
+
+                if (captureId === targetId) {
+                    const square = document.querySelector(`[square-id="${captureId}"]`);
+                    const targetPiece = square.firstChild;
+
+                    if (targetPiece && !targetPiece.classList.contains(pieceColor)) {
+                        return true;
+                    }
+                }
+            }
+
+            break;
     }
 }
 
@@ -661,18 +792,24 @@ function handlePawnPromotion(square, color) {
     square.firstChild?.setAttribute('draggable', true);
 }
 
-function handlePirateEvolution(square, color) {
+function handleFantasyEvolution(square, color, piece) {
 
-    // this broken as fuck idkkk
-    const temp = document.createElement('div');
-    temp.innerHTML = pirateKing.trim();
-    const evolvedPiece = temp.firstChild;
-    evolvedPiece.setAttribute('draggable', true);
-    evolvedPiece.classList.add(color);
+    const pieceId = piece.id;
 
-    square.replaceChildren(evolvedPiece);
-    square.classList.add('square');
+    square.classList.add('evolving-effect');
 
+    setTimeout(() => {
+
+        const temp = document.createElement('div');
+        temp.innerHTML = evolutionMap[pieceId].trim();
+        const evolvedPiece = temp.firstChild;
+        evolvedPiece.setAttribute('draggable', true);
+        evolvedPiece.classList.add(color);
+
+        square.replaceChildren(evolvedPiece);
+        square.classList.add('square');
+        square.classList.remove('evolving-effect');
+    }, captureDelay + 5);
 }
 
 function isEmpty(squareId) {
@@ -709,15 +846,66 @@ function undoMove(fromSquare, toSquare, movedPiece, capturedPiece = null) {
 }
 
 function changePlayer() {
-    if (playerTurn === 'black') {
-        reverseIds()
-        playerTurn = 'white'
-    } else {
-        revertIds()
-        playerTurn = 'black'
+    const state = guitarState[playerTurn];
+    const protectedPieces = Array.from(document.querySelectorAll('.fantasy-piece'))
+        .filter(p => p.dataset.divineProtected !== undefined);
+    
+    // this is extra shit
+    if (state.encoreActive) {
+        state.encoreMovesUsed += 1;
+
+        if (state.encoreMovesUsed < 2) {
+            console.log(`${playerTurn} Encore move ${state.encoreMovesUsed}/2`);
+            return; 
+
+        } else {
+            state.encoreActive = false;
+            state.encoreMovesUsed = 0;
+        }
     }
-    updateEvolvedSquares();
-    playerDisplay.textContent = playerTurn
+
+    protectedPieces.forEach(piece => {
+        // essentially a mark for protection to ensure that the shield stays for a turn
+        // > 0 here means still protected, and if it hits 0 the shield is removed, all updated in fantasyCapture function
+        
+        if (piece.dataset.divineProtected > 0) {
+            piece.dataset.divineProtected -= 1;
+
+        } else {
+            piece.classList.remove('divine-shield');
+            delete piece.dataset.divineProtected;
+        }
+    });
+    
+    updateEyeEvolutionTracking();
+
+    // Switch players
+    if (playerTurn === 'black') {
+        reverseIds();
+        playerTurn = 'white';
+    } else {
+        revertIds();
+        playerTurn = 'black';
+    }
+
+    // Activate Encore if it was queued
+    const newState = guitarState[playerTurn];
+
+    if (newState.encoreNextTurn) {
+        newState.encoreActive = true;
+        newState.encoreMovesUsed = 0;
+        newState.encoreNextTurn = false;
+        console.log(`${playerTurn} has ENCORE active! Two moves this turn.`);
+    }
+
+    updateSquares();
+    updateGameState();
+    playerDisplay.textContent = playerTurn;
+
+    if (gameBoardFantasy && gameBoardFantasy.offsetParent !== null) {
+        console.log('Turn: ' + gameState.turnCount);
+    }
+
 }
 
 function reverseIds() {
@@ -826,6 +1014,184 @@ function hasAnyLegalMoves(playerColor) {
 
 // Fantasy piece specific code starts here
 
+const gameState = {
+    currentPlayer: 'white',
+    selectedPiece: null,
+    eyeOfStorm: {
+        square: null,
+        tracker: new Map()
+    },
+    swampGate: {
+        portals: [],  
+        teleportWatcher: null 
+    },
+    turnCount: 0,
+    specialEffects: [],
+    gameOver: false,
+    abilityCharges: {
+
+    }
+};
+
+// PIECE REMOVAL FUNCTION ACROSS ALL PLATFORMS
+function handleFantasyCapture(targetSquare, target) {
+
+    if (!target) {
+        console.log('No target piece to capture!');
+        return false;
+    }
+
+    if (target.classList.contains(playerTurn)) {
+        console.log('Cannot capture own piece!');
+        return false;
+    }
+
+    if (target.dataset.divineProtected) {
+        console.log("🛡️ Capture blocked by DIVINE PROTECTION!");
+
+        targetSquare.classList.add('shield-block');
+        targetSquare.addEventListener('animationend', () => {
+            targetSquare.classList.remove('shield-block');
+            delete target.dataset.divineProtected;
+            target.classList.remove('divine-shield');
+            console.log('DIVINE PROTECTION stopped this attack!');
+
+        }, { once: true });
+        
+        changePlayer();
+        return false;
+    }
+    
+    return true;
+}
+
+function updateEyeEvolutionTracking() {
+    const { square, tracker } = gameState.eyeOfStorm;
+    if (!square || !tracker) return;
+
+    const piece = square.querySelector('.fantasy-piece');
+
+    if (!piece || !tracker.has(piece)) {
+        tracker.clear(); 
+        return;
+    }
+
+    const count = tracker.get(piece) + 1;
+
+    // 4 turns to evolve without moving
+    if (count >= 8) {
+
+        if (piece.classList.contains('evolved') || !evolutionMap[piece.id]) {
+            return;
+        }
+
+        const evolvedHTML = evolutionMap[piece.id];
+        const temp = document.createElement('div');
+        temp.innerHTML = evolvedHTML.trim();
+        const evolvedElement = temp.firstChild;
+
+        const color = piece.classList.contains('white') ? 'white' : 'black';
+        evolvedElement.classList.add(color);
+        evolvedElement.classList.add('evolution-flare');
+
+        piece.parentElement.replaceChild(evolvedElement, piece);
+        
+        evolvedElement.addEventListener('animationend', () => {
+            evolvedElement.classList.remove('evolution-flare');
+        }, { once: true });
+
+        tracker.delete(piece);
+
+    } else {
+        tracker.set(piece, count);
+    }
+}
+
+function linkSwampPortals() {
+    const portals = Array.from(document.querySelectorAll('.square.swamp-portal'));
+
+    if (portals.length !== 2) return; // Need exactly two portals
+
+    const squareA = portals[0];
+    const squareB = portals[1];
+
+    const idA = squareA.getAttribute('square-id');
+    const idB = squareB.getAttribute('square-id');
+
+    gameState.swampGate.portals = [squareA, squareB];
+
+    delete squareA.dataset.linkedPortal;
+    delete squareB.dataset.linkedPortal;
+
+    squareA.dataset.linkedPortal = idB;
+    squareB.dataset.linkedPortal = idA;
+}
+
+// PASSIVES
+function handleOtterEvasion(otter, originSquare) {
+
+    const waterSquares = Array.from(document.querySelectorAll('.square.water'));
+    const unoccupied = waterSquares.filter(square => {
+        return !square.querySelector('.fantasy-piece');
+    });
+
+    if (unoccupied.length === 0) {
+        console.log("No unoccupied water squares available! Evasion fails!");
+        return;
+    }
+
+    const escapeSquare = unoccupied[Math.floor(Math.random() * unoccupied.length)];
+
+    originSquare.removeChild(otter);
+    escapeSquare.appendChild(otter);
+
+    otter.classList.remove('select-glow')
+    otter.classList.add('otter-evasion');
+    escapeSquare.classList.add('evasion-glow');
+    otter.dataset.evasion = 'false';
+
+    otter.addEventListener('animationend', () => {
+        otter.classList.remove('otter-evasion');
+    }, { once: true });
+
+    escapeSquare.addEventListener('animationend', () => {
+        escapeSquare.classList.remove('evasion-glow');
+    }, { once: true });
+}
+
+function handlePhoenixRebirth(phoenix, originSquare) {
+
+    const lavaSquares = Array.from(document.querySelectorAll('.square.lava'));
+    const unoccupied = lavaSquares.filter(square => {
+        return !square.querySelector('.fantasy-piece');
+    });
+
+    if (unoccupied.length === 0) {
+        console.log("No unoccupied lava squares available! Rebirth fails!");
+        return;
+    }
+
+    const escapeSquare = unoccupied[Math.floor(Math.random() * unoccupied.length)];
+
+    originSquare.removeChild(phoenix);
+    escapeSquare.appendChild(phoenix);
+
+    // this select-glow shit was the dumbest fucking fix i've ever seen
+    phoenix.classList.remove('select-glow')
+    phoenix.classList.add('phoenix-rebirth');
+    escapeSquare.classList.add('evasion-glow');
+    phoenix.dataset.evasion = 'false';
+
+    phoenix.addEventListener('animationend', () => {
+        console.log('reached')
+        phoenix.classList.remove('phoenix-rebirth');
+    }, { once: true });
+
+    escapeSquare.addEventListener('animationend', () => {
+        escapeSquare.classList.remove('evasion-glow');
+    }, { once: true });
+}
+
 // maps one-to-one
 const evolutionMap = {
     bomb: dynamite,
@@ -835,6 +1201,7 @@ const evolutionMap = {
     gryphon: hamsa,
     guitar: violin,
     jedi: sith,
+    jester: joker,
     khanda: zulfiqar,
     otter: whale,
     pirate: pirateKing,
@@ -842,26 +1209,40 @@ const evolutionMap = {
     staffSnake: kraken,
     tornado: thunder,
     umbrella: balloon,
+    viking: mace,
     wizard: witch
 }
 
 const devolutionMap = {
-    dynamite: 'bomb',
-    phoenix: 'dragon',
-    koi: 'fish',
-    crocodile: 'frog',
-    hamsa: 'gryphon',
-    violin: 'guitar',
-    sith: 'jedi',
-    zulfiqar: 'khanda',
-    whale: 'otter',
-    pirateKing: 'pirate',
-    pope: 'priest',
-    kraken: 'staffSnake',
-    thunder: 'tornado',
-    balloon: 'umbrella',
-    witch: 'wizard'
+    dynamite: bomb,
+    phoenix: dragon,
+    koi: fish,
+    crocodile: frog,
+    hamsa: gryphon,
+    violin: guitar,
+    sith: jedi,
+    joker: jester,
+    zulfiqar: khanda,
+    whale: otter,
+    pirateKing: pirate,
+    pope: priest,
+    kraken: staffSnake,
+    thunder: tornado,
+    balloon: umbrella,
+    mace: viking,
+    witch: wizard
 }
+
+// declaration of ability-sepcific variables
+let canCastAbility = true;
+let canCastSpecialAbility = true;
+let canCastUltimateAbility = true;
+let abilityDelay = 450;
+
+const guitarState = {
+    white: { encoreNextTurn: false, encoreActive: false, movesUsed: 0 },
+    black: { encoreNextTurn: false, encoreActive: false, movesUsed: 0 }
+};
 
 // list of abilities for each piece
 const abilityMap = {
@@ -871,7 +1252,7 @@ const abilityMap = {
         charges: 3,
         effect: function (piece, finished) {
             if (abilityMap.bomb.charges <= 0) {
-                console.log("No charges left for DOWN THE LINE!");
+                console.log(`No charges left for ${abilityMap.bomb.name}!`);
                 return;
             }
 
@@ -936,7 +1317,7 @@ const abilityMap = {
                         const target = square.querySelector('.piece, .fantasy-piece');
                         if (target) {
                             square.removeChild(target);
-                            updateEvolvedSquares();
+                            updateSquares();
                         }
                         
 
@@ -963,9 +1344,11 @@ const abilityMap = {
                         }, 600);
                     }, i * 100);
                 });
+                
+                console.log(`💣 Bomb used ${abilityMap.bomb.name}!`);
 
                 abilityMap.bomb.charges -= 1;
-                console.log(`💣 Bomb exploded! Charges left: ${abilityMap.bomb.charges}`);
+                console.log(`Charges remaining: ${abilityMap.bomb.charges}`);
                 finished();
             }
         }
@@ -978,12 +1361,11 @@ const abilityMap = {
         effect: (piece, finished) => {
 
             if (abilityMap.dragon.charges <= 0) {
-                console.log("No charges left for LANE OF FIRE!");
+                console.log(`No charges left for ${abilityMap.dragon.name}!`);
                 return;
             }
 
             const randomCol = Math.floor(Math.random() * width); // column 0–7
-            console.log(`🔥 Dragon casts LANE OF FIRE on column ${randomCol + 1}!`);
             
             flashColumn(randomCol);
             
@@ -997,12 +1379,14 @@ const abilityMap = {
                         const target = square.querySelector('.piece, .fantasy-piece');
                         if (target && target.dataset.fireproof !== 'true') {
                             square.removeChild(target);
-                            updateEvolvedSquares();
+                            updateSquares();
                         }
                     }
                 });
             }, 90 * width);
 
+            console.log(`🔥 Dragon casts ${abilityMap.dragon.name} on column ${randomCol + 1}!`);
+            
             abilityMap.dragon.charges -= 1;
             console.log(`Charges remaining: ${abilityMap.dragon.charges}`);
             finished();
@@ -1015,14 +1399,14 @@ const abilityMap = {
         effect: function (piece, finished) {
             
             if (abilityMap.fish.charges <= 0) {
-                console.log("No charges left for SINK AND RISE!");
+                console.log(`No charges left for ${abilityMap.fish.name}!`);
                 return;
             }
 
             const waterSquares = Array.from(document.querySelectorAll('.square.water'));
 
             const unoccupied = waterSquares.filter(square => {
-                return !square.querySelector('.piece, .fantasy-piece');
+                return !square.querySelector('.fantasy-piece');
             });
 
             if (unoccupied.length === 0) {
@@ -1039,7 +1423,7 @@ const abilityMap = {
             randomSquare.classList.add('fish-teleport');
             setTimeout(() => randomSquare.classList.remove('fish-teleport'), 300);
 
-            console.log("🐟 Fish used SINK AND RISE!");
+            console.log(`🐟 Fish used ${abilityMap.fish.name}!`);
 
             abilityMap.fish.charges -= 1;
             console.log(`Charges remaining: ${abilityMap.fish.charges}`);
@@ -1064,7 +1448,7 @@ const abilityMap = {
                 const clickedSquare = target.closest('.square');
 
                 if (!clickedPiece || clickedPiece === selectedPiece) {
-                    console.log("SWAMP SWAP canceled.");
+                    console.log(`${abilityMap.frog.name} canceled.`);
                     cleanup();
                     return;
                 }
@@ -1088,28 +1472,331 @@ const abilityMap = {
                 document.removeEventListener('click', handleSwapClick);
                 selectedSquare.classList.remove('swapping-frog');
                 document.querySelectorAll('.fantasy-piece').forEach(p => p.setAttribute('draggable', true));
-                updateEvolvedSquares();
+                updateSquares();
             }
 
-            setTimeout(() => {
-                document.addEventListener('click', handleSwapClick);
-            }, 0);
+            setTimeout(() => document.addEventListener('click', handleSwapClick), 0);
+
+            console.log(`🐸 Frog used ${abilityMap.frog.name}!`);
+
+            abilityMap.frog.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.frog.charges}`);
+        }
+    },
+
+    gryphon : {
+        name : "SKY DIVE",
+        charges: 99,    
+        effect: function (piece, finished) {
+
+            if (abilityMap.gryphon.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.gryphon.name}!`);
+                return;
+            }
+
+            const squares = document.querySelectorAll('.square');
+
+            squares.forEach(square => {
+                if (square.firstChild && !square.firstChild.classList.contains(playerTurn)) {
+                    square.classList.add('gryphon-targetable');
+                }
+            });
+
+            function handleTargetClick(e) {
+                const square = e.currentTarget;
+                const target = square.querySelector('.fantasy-piece');
+
+                squares.forEach(sq => {
+                    sq.classList.remove('gryphon-targetable');
+                    sq.removeEventListener('click', handleTargetClick);
+                });
+
+                if (target && !target.classList.contains(playerTurn) && !target.classList.contains('evolved')) {
+
+                    square.classList.add('gryphon-hit');
+                    square.removeChild(target);
+
+                    setTimeout(() => {
+                        square.classList.remove('gryphon-hit');
+                    }, 500);
+
+                    console.log(`🦅 Gryphon obliterated an enemy piece using ${abilityMap.gryphon.name}!`);
+
+                    abilityMap.gryphon.charges -= 1;
+                    console.log(`Charges remaining: ${abilityMap.gryphon.charges}`);
+
+                    updateSquares();
+                    finished();
+
+                } else {
+                    console.log(`🦅 ${abilityMap.gryphon.name} landed, but no enemy was hit.`);
+                }
+            }
+
+            squares.forEach(square => {
+                square.addEventListener('click', handleTargetClick);
+            });
+        }
+    },
+
+    guitar : {
+        name : "ENCORE",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (abilityMap.guitar.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.guitar.name}!`);
+                return;
+            }
+
+            guitarState[playerTurn].encoreNextTurn = true;
+
+            piece.parentElement.classList.add('encore-cast');
+            setTimeout(() => piece.parentElement.classList.remove('encore-cast'), 800);
+
+            console.log(`🎸 ${playerTurn} activated ${abilityMap.guitar.name}! They will get two moves on their next turn.`);
+
+            abilityMap.guitar.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.guitar.charges}`);
+            finished();
+        }
+    },
+
+    jedi : {
+        name : "FORCE PUSH",
+        charges: Infinity,
+        effect: function (piece, finished) {
+
+            if (abilityMap.jedi.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.jedi.name}!`);
+                return;
+            }
+
+            const enemyColor = playerTurn === 'white' ? 'black' : 'white';
+            const shouldPush = (row) => row < width / 2;
+            
+            const allPieces = Array.from(document.querySelectorAll(`.fantasy-piece.${enemyColor}`));
+
+            allPieces.forEach(target => {
+                const startSquare = target.parentElement;
+                const startId = Number(startSquare.getAttribute('square-id'));
+                const row = getRow(startId);
+                const col = getCol(startId);
+
+                if (!shouldPush(row)) return; 
+
+                const newRow = row + 1;
+                if (newRow < 0 || newRow >= width) return; 
+
+                const endId = newRow * width + col;
+                const endSquare = document.querySelector(`[square-id="${endId}"]`);
+
+                if (endSquare && !endSquare.querySelector('.fantasy-piece')) {
+                    startSquare.removeChild(target);
+                    endSquare.appendChild(target);
+
+                    target.classList.add('force-push');
+                    target.parentElement.classList.add('force-push');
+
+                    setTimeout(() => {
+                        target.classList.remove('force-push');
+                        target.parentElement.classList.remove('force-push');
+                    }, 400);
+                }
+            });
+
+            console.log(`🙌 Jedi pushed an enemy piece using ${abilityMap.jedi.name}!`);
+
+            abilityMap.jedi.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.jedi.charges}`);
+            finished();
+        }
+    },
+
+    jester : {
+        name : "JOKES ON YOU",
+        charges: 100,
+        effect: function (piece, finished) {
+
+            if (abilityMap.jester.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.jester.name}!`);
+                return;
+            }
+
+            const enemyColor = playerTurn === 'white' ? 'black' : 'white';
+            const enemyPieces = Array.from(document.querySelectorAll(`.fantasy-piece.${enemyColor}`));
+            
+            if (enemyPieces.length < 2) return;
+
+            const [firstTarget, secondTarget] = enemyPieces
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 2);
+            
+            const firstSquare = firstTarget.parentElement;
+            const secondSquare = secondTarget.parentElement;
+
+            firstSquare.replaceChild(secondTarget, firstTarget);
+            secondSquare.appendChild(firstTarget);
+
+            firstSquare.classList.add('jester-swap');
+            secondSquare.classList.add('jester-swap');
+
+            firstSquare.addEventListener('animationend', () => {
+                firstSquare.classList.remove('jester-swap');
+            }, { once: true });
+
+            secondSquare.addEventListener('animationend', () => {
+                secondSquare.classList.remove('jester-swap');
+            }, { once: true });
+
+            console.log(`🎭 Jester used ${abilityMap.jester.name}!`);
+
+            abilityMap.jester.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.jester.charges}`);
+            updateSquares();
+            finished();
+        }
+    },
+
+    khanda : {
+        name : "BALANCE THE SCALES",
+        charges: 2,
+        effect: function (piece, finished) {
+            if (abilityMap.khanda.charges <= 0) {
+                console.log("No charges left for BALANCE THE SCALES!");
+                return;
+            }
+
+            const allPieces = [...document.querySelectorAll('.fantasy-piece')];
+            const whitePieces = allPieces.filter(piece => piece.classList.contains('white'));
+            const blackPieces = allPieces.filter(piece => piece.classList.contains('black'));
+
+            const diff = Math.abs(whitePieces.length - blackPieces.length);
+
+            if (diff === 0) {
+                console.log("The board is already balanced.");
+                return;
+            }
+
+            const sideToCut = whitePieces.length > blackPieces.length ? whitePieces : blackPieces;
+
+            const candidates = sideToCut.filter(p => {
+                return !p.classList.contains('ultimate') &&
+                    !p.dataset.divineProtected &&
+                    !p.classList.contains('khanda'); 
+            });
+
+            if (candidates.length < diff) {
+                return;
+            }
+
+            const toEliminate = [];
+            while (toEliminate.length < diff) {
+                const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                if (!toEliminate.includes(pick)) toEliminate.push(pick);
+            }
+
+            toEliminate.forEach((target, i) => {
+                const square = target.parentElement;
+
+                target.classList.add('khanda-strike'); 
+                square.classList.add('khanda-glow');
+
+                target.addEventListener('animationend', () => {
+                    if (square.contains(target)) {
+                        square.removeChild(target);
+                    }
+                    updateSquares();
+                }, { once: true });
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('khanda-glow');
+                }, { once: true });
+
+            });
+
+            console.log(`⚖️ Khanda used ${abilityMap.khanda.name} to balance the battlefield!`)
+
+            abilityMap.khanda.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.khanda.charges}`);
+            finished();
+        }
+    },
+
+    otter : {
+        name : "PLAYFUL NATURE",
+        charges: Infinity,
+        effect: function (piece, finished) {
+
+            if (abilityMap.otter.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.otter.name}!`);
+                return;
+            }
+
+            const selectedPiece = piece;
+            const selectedSquare = selectedPiece.parentElement;
+
+            selectedSquare.classList.add('enhancing-otter');
+            document.querySelectorAll('.fantasy-piece').forEach(p => p.setAttribute('draggable', false));
+
+            const handleSwapClick = (e) => {
+                const target = e.target;
+                const clickedPiece = target.closest('.fantasy-piece');
+                const clickedSquare = target.closest('.square');
+
+                if (!clickedPiece || clickedPiece === selectedPiece) {
+                    console.log(`${abilityMap.otter.name} canceled.`);
+                    cleanup();
+                    return;
+                }
+
+                if (!clickedPiece.classList.contains(playerTurn)) {
+                    console.log("You can only enhance an ally.");
+                    return;
+                }
+                
+                clickedPiece.dataset.waterWalking = 'true';
+                clickedSquare.classList.add('water-upgrade');
+
+                clickedSquare.addEventListener('animationend', () => {
+                    clickedSquare.classList.remove('water-upgrade');
+                }, { once: true });
+
+                finished();
+                cleanup();
+            };
+
+            function cleanup() {
+                document.removeEventListener('click', handleSwapClick);
+                selectedSquare.classList.remove('enhancing-otter');
+                document.querySelectorAll('.fantasy-piece').forEach(p => p.setAttribute('draggable', true));
+                updateSquares();
+            }
+
+            setTimeout(() => document.addEventListener('click', handleSwapClick), 0);
+
+            console.log(`🦦 Otter used ${abilityMap.otter.name}!`);
+
+            abilityMap.otter.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.otter.charges}`);
         }
     },
 
     pirate : {
-        name : "FRONTAL SWEEP",
+        name : "FRONTAL SLASH",
         charges: 8,
         effect: function (piece, finished) {
 
             if (abilityMap.pirate.charges <= 0) {
-                console.log("No charges left for FRONTAL SWEEP!");
+                console.log(`No charges left for ${abilityMap.pirate.name}!`);
                 return;
             }
 
             const originId = Number(piece.parentElement.getAttribute('square-id'));
             const row = getRow(originId);
             const col = getCol(originId);
+            
+            const color = piece.classList.contains('white') ? 'white' : 'black';
             
             const frontRow = row + 1;
 
@@ -1134,32 +1821,70 @@ const abilityMap = {
 
                     const target = targetSquare?.querySelector('.fantasy-piece');
 
-                    if (target) {
+                    if (target && !target.classList.contains(color)) {
                         setTimeout(() => targetSquare.removeChild(target), 150);
                     }
 
-                    setTimeout(() => updateEvolvedSquares(), 200);
+                    setTimeout(() => updateSquares(), 200);
 
                 }
             }
 
+            console.log(`🏴‍☠️ Pirate used ${abilityMap.pirate.name}!`);
+
             abilityMap.pirate.charges -= 1;
-            console.log(`🚴‍♀️ Pirate used FRONTAL SWEEP! Charges left: ${abilityMap.pirate.charges}`);
+            console.log(`Charges remaining: ${abilityMap.pirate.charges}`);
             finished();
         }
     },
 
     priest : {
+        name: "DIVINE PROTECTION",
+        charges: 3,
+        effect: function (piece, finished) {
 
+            if (abilityMap.priest.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.priest.name}!`);
+                return;
+            }
+
+            const allUnmoved = Array.from(document.querySelectorAll('.fantasy-piece'))
+                .filter(piece => 
+                    !piece.dataset.moved &&
+                    piece.classList.contains(playerTurn)
+                );
+
+            allUnmoved.forEach(piece => {
+
+                if (piece.dataset.divineProtected !== undefined) {
+                    return;
+                }
+                piece.classList.add('divine-shield');
+                piece.dataset.divineProtected = 2;
+
+                const square = piece.parentElement;
+                square.classList.add('divine-upgrade');
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('divine-upgrade');
+                }, { once: true });
+            });
+
+            console.log(`⛪ Priest cast ${abilityMap.priest.name} on ${allUnmoved.length} unmoved piece(s)!`);
+            
+            abilityMap.priest.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.priest.charges}`);
+            updateSquares();
+            finished();
+        }
     },
 
     staffSnake : {
-        name : "SNAKE STAFF",
+        name : "SNAKE BITE",
         charges: 9,
         effect: function (piece, finished) {
 
             if (abilityMap.staffSnake.charges <= 0) {
-                console.log("No charges left for SNAKE BITE!");
+                console.log(`No charges left for ${abilityMap.staffSnake.name}!`);
                 return;
             }
 
@@ -1177,13 +1902,27 @@ const abilityMap = {
                 }
 
                 const evolvedHTML = evolutionMap[type];
-                target.parentElement.innerHTML = evolvedHTML;
+                const temp = document.createElement('div');
+                temp.innerHTML = evolvedHTML.trim();
+                const evolvedElement = temp.firstChild;
 
+                const color = target.classList.contains('white') ? 'white' : 'black';
+                evolvedElement.classList.add(color);
+                evolvedElement.classList.add('evolution-flare');
+
+                target.parentElement.replaceChild(evolvedElement, target);
+                
+                evolvedElement.addEventListener('animationend', () => {
+                    evolvedElement.classList.remove('evolution-flare');
+                }, { once: true });
+
+                console.log(`⚕️ Staff Snake used ${abilityMap.staffSnake.name}! It transformed a ${type} into a ${evolvedElement.id}!`);
+                
                 abilityMap.staffSnake.charges -= 1;
-                console.log(`Snake Bite used! ${abilityMap.staffSnake.charges} charges left.`);
+                console.log(`Charges remaining: ${abilityMap.staffSnake.charges}`);
 
                 document.removeEventListener('click', clickHandler);
-                updateEvolvedSquares();
+                updateSquares();
                 finished();
             };
 
@@ -1192,9 +1931,363 @@ const abilityMap = {
             }, 0);
         }
     },
+
+    tornado : {
+        name : "HEAVY WINDS",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (abilityMap.tornado.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.tornado.name}!`);
+                return;
+            }
+
+            const middleRowRange = [...Array(width * 4).keys()].map(i => i + width * 4); 
+            const allSquares = middleRowRange
+                .map(id => document.querySelector(`[square-id="${id}"]`))
+                .filter(square => square && square !== piece.closest('.square'));
+
+            let allTargets = allSquares
+                .map(square => square.querySelector('.fantasy-piece'))
+                .filter(target => target && target !== piece);
+
+            const availableSquares = [...allSquares];
+            for (let i = availableSquares.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableSquares[i], availableSquares[j]] = [availableSquares[j], availableSquares[i]];
+            }
+
+            const waterSquares = Array.from(document.querySelectorAll('#fantasy-gameboard .square.water'));
+            const lavaSquares = Array.from(document.querySelectorAll('#fantasy-gameboard .square.lava'));
+            const magicSquares = Array.from(document.querySelectorAll('#fantasy-gameboard .square.magic'));
+            
+            allSquares.forEach(square => {
+                square.classList.add('tornado-zone'); 
+
+                square.classList.remove('water');
+                square.classList.remove('lava');
+                square.classList.remove('magic')
+
+                setTimeout(() => {
+                    square.classList.remove('tornado-zone');
+                    if (square && waterSquares.includes(square)) square.classList.add('water');
+                    if (square && lavaSquares.includes(square)) square.classList.add('lava');
+                    if (square && magicSquares.includes(square)) square.classList.add('magic');
+                }, 1500); // Match the duration of spiralSpin
+                
+            });
+
+            allTargets.forEach((target, index) => {
+                const oldSquare = target.parentElement;
+                const newSquare = availableSquares[index];
+
+                target.classList.add('tornado-fling');
+                target.style.pointerEvents = 'none';
+
+                target.addEventListener('animationend', () => {
+                    oldSquare.removeChild(target);
+                    newSquare.appendChild(target);
+                    updateSquares();
+                    target.classList.remove('tornado-fling');
+                    target.style.pointerEvents = '';
+                }, { once: true });
+
+            });
+
+            console.log(`🌪️ Tornado scattered the center with ${abilityMap.tornado.name}!`);
+            
+            abilityMap.tornado.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.tornado.charges}`);
+            finished();
+        }
+    },
+
+    viking : {
+        name : "FROSTAL SMASH",
+        charges: Infinity,
+        effect: function (piece, finished) {
+            
+            if (abilityMap.viking.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.viking.name}!`);
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const row = getRow(originId);
+            const col = getCol(originId);
+
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+
+            for (let i = 1; i <= 2; i++) {
+                const targetRow = row + i;
+
+                if (targetRow < 0 || targetRow >= width) continue;
+
+                const targetId = targetRow * width + col;
+                const targetSquare = document.querySelector(`[square-id="${targetId}"]`);
+                const target = targetSquare?.querySelector('.fantasy-piece');
+                
+                targetSquare.classList.add('frost-smash');
+
+                if (targetSquare && target && !target.classList.contains(color)) {
+                    targetSquare.removeChild(target)
+                }
+
+                targetSquare.addEventListener('animationend', () => {
+                    targetSquare.classList.remove('frost-smash');
+                }, { once: true });
+
+                updateSquares();
+            }
+
+            console.log(`❄️ Viking used ${abilityMap.viking.name}!`);
+
+            abilityMap.viking.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.viking.charges}`);
+            finished();
+        }
+    },
+
+    wizard : {
+        name : "MAGIC MISSILE",
+        charges: Infinity,
+        effect: function (piece, finished) {
+
+            if (abilityMap.wizard.charges <= 0) {
+                console.log(`No charges left for ${abilityMap.wizard.name}!`);
+                return;
+            }
+
+            const targets = Array.from(document.querySelectorAll(`.fantasy-piece.${playerTurn}`)).filter(piece => {
+                const type = piece.id;
+                return !piece.classList.contains('evolved') && evolutionMap[type];
+            });
+
+            if (targets.length === 0) {
+                finished();
+                return;
+            }
+
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            const type = target.id;
+            const evolvedHTML = evolutionMap[type];
+
+            const temp = document.createElement('div');
+            temp.innerHTML = evolvedHTML.trim();
+            const evolvedElement = temp.firstChild;
+
+            const color = target.classList.contains('white') ? 'white' : 'black';
+            evolvedElement.classList.add(color);
+            evolvedElement.classList.add('evolution-flare');
+
+            target.parentElement.replaceChild(evolvedElement, target);
+
+            evolvedElement.addEventListener('animationend', () => {
+                evolvedElement.classList.remove('evolution-flare');
+            }, { once: true });
+
+            console.log(`${abilityMap.wizard.name} randomly evolved ${type} to ${evolvedElement.id}!`);
+            
+            abilityMap.wizard.charges -= 1;
+            console.log(`Charges remaining: ${abilityMap.wizard.charges}`);
+            updateSquares();
+            finished();
+        }
+    }
 }
 
 const specialAbilityMap = {
+
+    dynamite: {
+        name: "FIVE BIG BOOMS",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.dynamite.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.dynamite.name}!`);
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const col = getCol(originId);
+            let currentRow = getRow(originId);
+            let nextRow = currentRow + 1;
+
+            const path = [];
+
+            while (nextRow < width) {
+                const nextId = nextRow * width + col;
+                const nextSquare = document.querySelector(`[square-id="${nextId}"]`);
+                const pieceInNext = nextSquare.querySelector('.piece, .fantasy-piece');
+
+                if (pieceInNext) break;
+
+                path.push(nextSquare);
+                currentRow = nextRow;
+                nextRow++;
+            }
+
+            let i = 0;
+
+            function slideStep() {
+                if (i < path.length) {
+
+                    const nextSquare = path[i];
+                    console.log(piece.parentElement)
+                    piece.parentElement.removeChild(piece);
+                    console.log('reached')
+                    triggerExplosion(getRow(nextSquare.getAttribute('square-id')), col);
+                    nextSquare.appendChild(piece);
+                    i++;
+                    setTimeout(slideStep, 301); 
+                } else {
+                    piece.parentElement.removeChild(piece);
+                    triggerClusterExplosions();
+                }
+            }
+
+            slideStep();
+
+            function triggerExplosion(row, col) {
+
+                const splashRadius = [-1, 0, 1];
+
+                splashRadius.forEach(dy => {
+                    splashRadius.forEach(dx => {
+                        const r = row + dy;
+                        const c = col + dx;
+                        if (r >= 0 && r < width && c >= 0 && c < width) {
+                            const targetId = r * width + c;
+                            const square = document.querySelector(`[square-id="${targetId}"]`);
+
+                            if (square) {
+                                square.classList.remove('explosion-zone');
+                                void square.offsetWidth; 
+                                square.classList.add('explosion-zone');
+
+                                const target = square.querySelector('.fantasy-piece');
+
+                                if (target) {
+                                    square.removeChild(target);
+                                    updateSquares();
+                                }
+
+                                const explosion = document.createElement('div');
+
+                                explosion.style.position = 'absolute';
+                                explosion.style.top = '50%';
+                                explosion.style.left = '50%';
+                                explosion.style.transform = 'translate(-50%, -50%) scale(2.5)';
+                                explosion.style.fontSize = '3.5rem';
+                                explosion.style.pointerEvents = 'none';
+                                explosion.style.zIndex = '999';
+                                explosion.style.animation = 'cannon-pulse-glow 0.5s ease-out';
+
+                                const ring = document.createElement('div');
+                                ring.classList.add('explosion-ring');
+                                square.appendChild(ring);
+                                square.appendChild(explosion);
+
+                                setTimeout(() => {
+                                    explosion.remove();
+                                    ring.remove();
+                                    square.classList.remove('explosion-zone');
+                                }, 300);
+
+                            }
+                        }
+                    });
+                });
+
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 400);
+
+                
+            }
+
+            function triggerClusterExplosions() {
+                const enemyStart = Math.floor(width / 2);
+                const enemyEnd = width; 
+                const allEnemySquares = [];
+
+                for (let row = enemyStart; row < enemyEnd; row++) {
+                    for (let col = 0; col < width; col++) {
+                        const id = row * width + col;
+                        const square = document.querySelector(`[square-id="${id}"]`);
+                        if (square) allEnemySquares.push(square);
+                    }
+                }
+
+                const clusterTargets = [];
+                while (clusterTargets.length < 5 && allEnemySquares.length > 0) {
+                    const randIndex = Math.floor(Math.random() * allEnemySquares.length);
+                    clusterTargets.push(allEnemySquares.splice(randIndex, 1)[0]);
+                }
+
+                clusterTargets.forEach((square, idx) => {
+                    setTimeout(() => {
+
+                        square.classList.add('explosion-zone');
+                        
+                        target = square.querySelector('.fantasy-piece');
+
+                        if (target) square.removeChild(target);
+
+                        square.addEventListener('animationend', () => {
+                            square.classList.remove('explosion-zone');
+                        }, { once: true });
+
+                        updateSquares();
+                    }, 300 * idx);
+                });
+
+                console.log(`🧨 Dynamite exploded and used ${specialAbilityMap.dynamite.name}!`);
+
+                abilityMap.bomb.charges -= 1;
+                console.log(`Charges remaining: ${specialAbilityMap.dynamite.charges}`);
+                finished();
+            }
+        }
+    },
+
+    phoenix : {
+        name : "DIVINE EMBER",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.phoenix.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.phoenix.name}!`);
+                return;
+            }
+
+            const start = width * 6;
+            const end = width * 9;
+
+            for (let id = start; id < end; id++) {
+                if (Math.random() < 0.3) {
+                    const targetSquare = document.querySelector(`[square-id="${id}"]`);
+
+                    if (targetSquare) {
+                        targetSquare.classList.add('lava');
+                        targetSquare.classList.add('lava-burst');
+                        
+                        targetSquare.addEventListener('animationend', () => {
+                            targetSquare.classList.remove('lava-burst');
+                            updateSquares();
+                        }, { once: true });
+                    }
+                }
+            }
+            // allows rebirth again 🔥
+            piece.dataset.evasion = 'true';
+
+            console.log(`🔥 PHOENIX casted ${specialAbilityMap.phoenix.name}!`);
+
+            specialAbilityMap.phoenix.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.phoenix.charges}`);
+            finished();
+        }
+    },
 
     koi : {
         name : "DUAL AFFINITY",
@@ -1202,7 +2295,7 @@ const specialAbilityMap = {
         effect: function (piece, finished) {
 
             if (specialAbilityMap.koi.charges <= 0) {
-                console.log("No charges left for DUAL AFFINITY!");
+                console.log(`No charges left for ${specialAbilityMap.koi.name}!`);
                 return;
             }
 
@@ -1244,11 +2337,12 @@ const specialAbilityMap = {
                             const koiClone = temp.firstChild;
                             koiClone.setAttribute('draggable', true);
                             koiClone.classList.add(pieceColor);
+                            koiClone.classList.remove('evolved');
 
                             square.replaceChildren(koiClone);
                             square.classList.add('square');
 
-                            updateEvolvedSquares();
+                            updateSquares();
 
                         } else {
                             square.classList.add('water');
@@ -1266,61 +2360,498 @@ const specialAbilityMap = {
 
             strike(firstTarget, 0);
             strike(secondTarget, 1);
+            
+            console.log(`🐟 KOI used ${specialAbilityMap.koi.name}!`);
 
             specialAbilityMap.koi.charges -= 1;
-            console.log(`🐟 KOI used DUAL AFFECTION! Charges left: ${specialAbilityMap.koi.charges}`);
+            console.log(`Charges remaining: ${specialAbilityMap.koi.charges}`);
         }
     },
 
-    pirateKing : {
-        name : "CANNONBALL BARRAGE",
-        charges: 7,
+    crocodile: {
+        name: "SWAMPGATE",
+        charges: 2,
         effect: function (piece, finished) {
 
-            if (specialAbilityMap.pirateKing.charges <= 0) {
-                console.log("No charges left for CANNONBALL BARRAGE!");
+            if (specialAbilityMap.crocodile.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.crocodile.name}!`);
                 return;
             }
 
-            const allSquares = document.querySelectorAll(`[square-id]`);
-            const numberOfTargets = Math.floor(Math.random() * 4) + 8;
-            const selectedSquares = [];
+            let selectedSquares = [];
 
-            document.body.classList.add('shake');
-            setTimeout(() => document.body.classList.remove('shake'), 400);
+            if (gameState.swampGate.portals.length === 2) {
+                linkSwampPortals();
+                gameState.swampGate.portals.forEach(square => {
+                    square.classList.remove('swamp-portal');
+                    delete square.dataset.linkedPortal;
+                });
+                gameState.swampGate.portals = [];
+            }
 
-            while (selectedSquares.length < numberOfTargets) {
-                const randomSquare = allSquares[Math.floor(Math.random() * allSquares.length)];
-                if (!selectedSquares.includes(randomSquare)) {
-                    selectedSquares.push(randomSquare);
+            if (gameState.swampGate.teleportWatcher) {
+                gameState.swampGate.teleportWatcher.disconnect();
+                gameState.swampGate.teleportWatcher = null;
+            }
+
+            function selectPortalSquare(e) {
+                const square = e.target.closest('.square');
+                if (!square || selectedSquares.includes(square)) return;
+
+                square.classList.add('swamp-portal');
+                selectedSquares.push(square);
+
+                if (selectedSquares.length === 2) {
+                    document.removeEventListener('click', selectPortalSquare);
+
+                    const [squareA, squareB] = selectedSquares;
+
+                    squareA.dataset.linkedPortal = squareB.getAttribute('square-id');
+                    squareB.dataset.linkedPortal = squareA.getAttribute('square-id');
+
+                    gameState.swampGate.portals = [squareA, squareB];
+
+                    const teleportWatcher = new MutationObserver(mutations => {
+                        for (const mutation of mutations) {
+                            if (mutation.type === "childList") {
+                                for (const node of mutation.addedNodes) {
+                                    const movedPiece = node.closest?.('.fantasy-piece');
+                                    
+                                    if (!movedPiece || movedPiece.dataset.justTeleported === 'true') continue;
+
+                                    const parent = movedPiece.closest('.square');
+                                    const linkId = parent?.dataset.linkedPortal;
+                                    const destination = document.querySelector(`[square-id="${linkId}"]`);
+
+                                    if (linkId && destination && !destination.querySelector('.fantasy-piece')) {
+                                        movedPiece.dataset.justTeleported = 'true';
+                                        parent.removeChild(movedPiece);
+
+                                        destination.classList.add('swamp-teleport');
+                                        destination.appendChild(movedPiece);
+                                        
+                                        destination.addEventListener('animationend', () => {
+                                            destination.classList.remove('swamp-teleport');
+                                        })
+
+                                        setTimeout(() => {
+                                            movedPiece.dataset.justTeleported = 'false';
+                                        }, 100);
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    teleportWatcher.observe(document.querySelector('#fantasy-gameboard'), {
+                        childList: true,
+                        subtree: true
+                    });
+
+                    gameState.swampGate.teleportWatcher = teleportWatcher;
+                    
+                    console.log(`🐊 Crocodile cast ${specialAbilityMap.crocodile.name}!`);
+                    
+                    specialAbilityMap.crocodile.charges -= 1;
+                    console.log(`Charges remaining: ${specialAbilityMap.crocodile.charges}`);
+                    updateSquares();
+                    finished();
                 }
             }
 
-            selectedSquares.forEach((square, i) => {
-                setTimeout(() => {
-                    square.classList.add('barrage-target');
+            document.addEventListener('click', selectPortalSquare);
+        }
+    },
 
-                    const cannonball = document.createElement('div');
-                    cannonball.classList.add('cannonball');
-                    square.appendChild(cannonball);
-                    setTimeout(() => cannonball.remove(), 750);
+    sith : {
+        name : "WELCOME TO THE DARK SIDE",
+        charges: 6,
+        effect: function (piece, finished) {
+            if (specialAbilityMap.sith.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.sith.name}!`);
+                return;
+            }
 
-                    setTimeout(() => {
-                    const target = square.querySelector('.piece, .fantasy-piece');
-                    if (target && !target.id.includes('pirateKing')) {
-                        square.removeChild(target);
-                        updateEvolvedSquares();
-                    }
-                        square.classList.remove('barrage-target');
-                    }, 1000);
-                }, i * 200);
+            const enemyColor = playerTurn === 'white' ? 'black' : 'white';
+            const allEnemies = Array.from(document.querySelectorAll(`.fantasy-piece.${enemyColor}`));
+
+            const evolvedTargets = allEnemies.filter(p => p.classList.contains('evolved'));
+            const basicTargets = allEnemies.filter(p => !p.classList.contains('evolved'));
+            
+            const chosenEvolved = evolvedTargets.length > 0
+                ? [evolvedTargets[Math.floor(Math.random() * evolvedTargets.length)]]
+                : [];
+
+            const chosenBasics = basicTargets
+                .sort(() => 0.5 - Math.random())
+                .slice(0, Math.floor(Math.random() * 3)); 
+
+            const toConvert = [...chosenEvolved, ...chosenBasics];
+
+            toConvert.forEach(target => {
+                const square = target.parentElement;
+
+                const replacement = target.cloneNode(true);
+                replacement.classList.remove(enemyColor);
+                replacement.classList.add(playerTurn);
+
+                square.classList.add('dark-conversion');
+
+                square.replaceChild(replacement, target);
+                
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('dark-conversion');
+                }, { once: true });
+
+
             });
 
-            console.log(`🏴‍☠️ PirateKing launched CANNONBALL BARRAGE on ${numberOfTargets} squares!`);
-            
-            specialAbilityMap.pirateKing.charges -= 1;
-            console.log(`Charges remaining: ${specialAbilityMap.pirateKing.charges}`);
+            console.log(`🩸 Sith used ${specialAbilityMap.sith.name} to convert ${toConvert.length} enemies!`);
+
+            specialAbilityMap.sith.charges -= 1;
+            console.log(` Charges remaining: ${specialAbilityMap.sith.charges}`);
+            updateSquares();
             finished();
+        }
+    },
+
+    joker : {
+        name: "CHAOS REIGNS",
+        charges: 3,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.joker.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.joker.name}!`);
+                return;
+            }
+
+            const enemyColor = playerTurn === 'white' ? 'black' : 'white';
+            const enemyPieces = Array.from(document.querySelectorAll(`.fantasy-piece.${enemyColor}`));
+
+            if (enemyPieces.length < 2) return;
+
+            const originalSquares = enemyPieces.map(p => p.parentElement);
+
+            const shuffledPieces = [...enemyPieces].sort(() => 0.5 - Math.random());
+
+            originalSquares.forEach(square => {
+                const target = square.querySelector(`.fantasy-piece.${enemyColor}`);
+                if (target) square.removeChild(target);
+            });
+
+            originalSquares.forEach((square, i) => {
+                square.appendChild(shuffledPieces[i]);
+                square.classList.add('joker-swap'); 
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('joker-swap');
+                }, { once: true });
+            });
+
+            console.log(`🃏 Joker used ${specialAbilityMap.joker.name}!`);
+
+            specialAbilityMap.joker.charges -= 1;
+            console.log(` Charges remaining: ${specialAbilityMap.joker.charges}`);
+            updateSquares();
+            finished();
+        }
+    },
+
+    hamsa: {
+        name: "HAND OF FATE",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.hamsa.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.hamsa.name}!`);
+                return;
+            }
+
+            const terrainClasses = ['water', 'lava', 'magic', 'swamp-portal'];
+
+            const allSquares = Array.from(document.querySelectorAll('#fantasy-gameboard .square'));
+            
+            const squaresWithTerrain = allSquares.filter(square => 
+                terrainClasses.some(clss => square.classList.contains(clss))
+            );
+
+            const terrains = squaresWithTerrain.map(square => {
+                for (const clss of terrainClasses) {
+                    if (square.classList.contains(clss)) return clss;
+                }
+                return null;
+            });
+
+            // Shuffle terrain array (Fisher-Yates shuffle)
+            for (let i = terrains.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [terrains[i], terrains[j]] = [terrains[j], terrains[i]];
+            }
+
+            squaresWithTerrain.forEach((square, idx) => {
+                square.classList.add('hamsa-spin')
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('hamsa-spin');
+                }, { once: true });
+
+                terrainClasses.forEach(cls => square.classList.remove(cls));
+                if (terrains[idx]) {
+                    square.classList.add(terrains[idx]);
+                }
+            });
+
+            console.log(`🎲 Hamsa shuffled all terrain squares with ${specialAbilityMap.hamsa.name}!`);
+            
+            specialAbilityMap.hamsa.charges -= 1;
+            console.log(` Charges remaining: ${specialAbilityMap.hamsa.charges}`);
+            updateSquares();
+            finished();
+        }
+    },
+
+    violin: {
+        name: "ARIA OF ASCENSION",
+        charges: 3,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.violin.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.violin.name}!`);
+                return;
+            }
+
+            const violinSquare = piece.closest('.square');
+            const originId = violinSquare.getAttribute('square-id');
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+            const enemyColor = color === 'white' ? 'black' : 'white';
+
+            const direction = prompt("Cast direction? (up, down, left, right)").toLowerCase();
+            const validDirections = ['up', 'down', 'left', 'right'];
+
+            if (!validDirections.includes(direction)) {
+                console.log("Invalid direction.");
+                return;
+            }
+
+            const row = getRow(originId);
+            const col = getCol(originId);
+
+            const cone = [];
+            const maxDepth = 6;
+
+            for (let d = 1; d < maxDepth; d++) {
+                const range = 1 + 2 * (Math.ceil(maxDepth / 2) - Math.abs(d - Math.ceil(maxDepth / 2))); // 3→5→7→5→3
+                const half = Math.floor(range / 2);
+
+                for (let i = -half; i <= half; i++) {
+                    let nx = col;
+                    let ny = row;
+
+                    if (direction === 'up') {
+                        nx += i;
+                        ny += d;
+                    } else if (direction === 'down') {
+                        nx += i;
+                        ny -= d;
+                    } else if (direction === 'left') {
+                        nx -= d;
+                        ny += i;
+                    } else if (direction === 'right') {
+                        nx += d;
+                        ny += i;
+                    }
+
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < width) {
+                        cone.push(ny * width + nx);
+                    }
+                }
+            }
+
+            cone.forEach(id => {
+
+                const square = document.querySelector(`[square-id="${id}"]`);
+
+                if (!square) return;
+
+                square.classList.add('musical-cone-hit');
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('musical-cone-hit');
+                }, { once: true });
+
+                const targetPiece = square.querySelector('.fantasy-piece');
+
+                if (!targetPiece) return;
+
+                if (targetPiece.classList.contains(color)) {
+
+                    if (!targetPiece.classList.contains('evolved') && targetPiece.id in evolutionMap) {
+                        const evolvedHTML = evolutionMap[targetPiece.id];
+                        const temp = document.createElement('div');
+                        temp.innerHTML = evolvedHTML.trim();
+                        const evolvedElement = temp.firstChild;
+
+                        evolvedElement.classList.add(color);
+                        evolvedElement.classList.add('evolution-flare');
+
+                        targetPiece.parentElement.replaceChild(evolvedElement, targetPiece);
+                        
+                        evolvedElement.addEventListener('animationend', () => {
+                            evolvedElement.classList.remove('evolution-flare');
+                        }, { once: true });
+                    }
+
+                } else {
+
+                    if (targetPiece.classList.contains('evolved') && targetPiece.id in devolutionMap) {
+                        const devolvedHTML = devolutionMap[targetPiece.id];
+                        const temp = document.createElement('div');
+                        temp.innerHTML = devolvedHTML.trim();
+                        const devolvedElement = temp.firstChild;
+
+                        devolvedElement.classList.add(enemyColor);
+                        devolvedElement.classList.add('devolve-flare');
+
+                        square.replaceChild(devolvedElement, targetPiece);
+
+                        devolvedElement.addEventListener('animationend', () => {
+                            devolvedElement.classList.remove('devolve-flare');
+                        }, { once: true });
+
+                    } else {
+
+                        targetPiece.classList.add('musical-death');
+                        
+                        if (color === 'black' && targetPiece.classList.contains('white')) {
+                            targetPiece.classList.add('outline-white');
+                        }
+
+                        targetPiece.addEventListener('animationend', () => {
+                            square.removeChild(targetPiece);
+                            targetPiece.classList.remove('musical-death');
+                            targetPiece.classList.remove('outline-white');
+                        }, { once: true });
+                    }
+                }
+            });
+
+            violinSquare.classList.add('aria-cast');
+
+            violinSquare.addEventListener('animationend', () => {
+                violinSquare.classList.remove('aria-cast');
+            }, { once: true });
+
+            console.log(`🎻 Violin cast ARIA OF ${specialAbilityMap.violin.name} to the ${direction}`);
+            
+            specialAbilityMap.violin.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.violin.charges}`);
+
+            setTimeout(() => {
+                finished();
+            }, 800);
+        }
+    },
+
+    zulfiqar : {
+        name : "DIVINE JUDGEMENT",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.zulfiqar.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.zulfiqar.name}!`);
+                return;
+            }
+
+            const allPieces = document.querySelectorAll('.fantasy-piece');
+            const playerPieces = Array.from(allPieces).filter(piece => piece.classList.contains(playerTurn));
+            const opponentPieces = Array.from(allPieces).filter(piece => !piece.classList.contains(playerTurn));
+
+            const diagonals = [[], []]; 
+
+            for (let i = 0; i < width; i++) {
+                diagonals[0].push(i * width + i); 
+                diagonals[1].push(i * width + (width - 1 - i)); 
+            }
+
+            const runSlash = (diagIndex) => {
+                diagonals[diagIndex].forEach(id => {
+                    const square = document.querySelector(`[square-id="${id}"]`);
+                    if (!square) return;
+
+                    square.classList.add('zulfiqar-split'); 
+
+                    const target = square.querySelector('.fantasy-piece');
+
+                    if (target && !target.classList.contains(playerTurn)) {
+                        if (target.classList.contains('evolved')) {
+
+                            if (target.id in devolutionMap) {
+                                const evolvedEnemyHTML = devolutionMap[target.id]; 
+                                const temp = document.createElement('div');
+                                temp.innerHTML = evolvedEnemyHTML.trim();
+                                const newEnemyPiece = temp.firstChild;
+                                newEnemyPiece.classList.add(target.classList.contains('white') ? 'white' : 'black');
+                                newEnemyPiece.classList.add('devolve-flare');
+                                newEnemyPiece.addEventListener('animationend', () => {
+                                    newEnemyPiece.classList.remove('devolve-flare');
+                                }, { once: true });
+                                
+                                target.parentElement.replaceChild(newEnemyPiece, target);
+                            }
+                            
+                        } else {
+                            square.removeChild(target);
+                        }
+                    }
+
+                    if (target && target.classList.contains(playerTurn)) {
+                        if (!target.classList.contains('evolved')) {
+                            
+                            if (target.id in evolutionMap) {
+                                const evolvedAlliedHTML = evolutionMap[target.id]; 
+                                const temp = document.createElement('div');
+                                temp.innerHTML = evolvedAlliedHTML.trim();
+                                const newAlliedPiece = temp.firstChild;
+                                newAlliedPiece.classList.add(target.classList.contains('white') ? 'white' : 'black');
+                                newAlliedPiece.classList.add('evolution-flare');
+                                newAlliedPiece.addEventListener('animationend', () => {
+                                    newAlliedPiece.classList.remove('evolution-flare');
+                                }, { once: true });
+
+                                target.parentElement.replaceChild(newAlliedPiece, target);
+                            }
+
+                        }
+                    }
+
+                    square.addEventListener('animationend', () => {
+                        square.classList.remove('zulfiqar-split');
+                    }, { once: true });
+                });
+            };
+
+            const shouldDoubleSlash = playerPieces.length <= opponentPieces.length;
+            const delay = 600;
+
+            if (shouldDoubleSlash) {
+                runSlash(0);
+                setTimeout(() => runSlash(1), delay / 2);
+                } else {
+                const chosen = Math.random() < 0.5 ? 0 : 1;
+                runSlash(chosen);
+            }
+
+            specialAbilityMap.zulfiqar.charges -= 1;
+
+            console.log(`⚔️ Zulfiqar unleashed ${specialAbilityMap.zulfiqar.name}!`);
+            
+            specialAbilityMap.joker.charges -= 1;
+            console.log(` Charges remaining: ${specialAbilityMap.zulfiqar.charges}`);
+
+            setTimeout(() => {
+                updateSquares();
+                finished();
+            }, delay);
         }
     },
 
@@ -1330,7 +2861,7 @@ const specialAbilityMap = {
         effect: function (piece, finished) {
 
             if (specialAbilityMap.whale.charges <= 0) {
-                console.log("No charges left for TIDAL WAVE!");
+                console.log(`No charges left for ${specialAbilityMap.whale.name}!`);
                 return;
             }
 
@@ -1379,16 +2910,597 @@ const specialAbilityMap = {
                     setTimeout(() => {
                         splash.remove();
                         square.classList.remove('splash-zone');
-                        updateEvolvedSquares();
+                        updateSquares();
                     }, 500);
                 }, i * 80);
 
             });
-
+            
+            console.log(`🐋 Whale unleashed a ${specialAbilityMap.whale.name}!`);
+            
             specialAbilityMap.whale.charges -= 1;
-            console.log(`🐋 Whale unleashed a tidal wave! Charges left: ${specialAbilityMap.whale.charges}`);
+            console.log(`Charges remaining: ${specialAbilityMap.whale.charges}`);
             finished();
         }
+    },
+
+    pirateKing : {
+        name : "CANNONBALL BARRAGE",
+        charges: 7,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.pirateKing.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.pirateKing.name}!`);
+                return;
+            }
+
+            const allSquares = document.querySelectorAll(`[square-id]`);
+            const numberOfTargets = Math.floor(Math.random() * 4) + 8;
+            const selectedSquares = [];
+
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+
+            while (selectedSquares.length < numberOfTargets) {
+                const randomSquare = allSquares[Math.floor(Math.random() * allSquares.length)];
+                if (!selectedSquares.includes(randomSquare)) {
+                    selectedSquares.push(randomSquare);
+                }
+            }
+
+            selectedSquares.forEach((square, i) => {
+                setTimeout(() => {
+                    square.classList.add('barrage-target');
+
+                    const cannonball = document.createElement('div');
+                    cannonball.classList.add('cannonball');
+                    square.appendChild(cannonball);
+                    setTimeout(() => cannonball.remove(), 750);
+
+                    setTimeout(() => {
+                        const target = square.querySelector('.piece, .fantasy-piece');
+                        if (target && !target.id.includes('pirateKing')) {
+                            square.removeChild(target);
+                            updateSquares();
+                        }
+                            square.classList.remove('barrage-target');
+                    }, 1000);
+                }, i * 200);
+            });
+
+            console.log(`🏴‍☠️ PirateKing launched ${specialAbilityMap.pirateKing.name} on ${numberOfTargets} squares!`);
+            
+            specialAbilityMap.pirateKing.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.pirateKing.charges}`);
+            finished();
+        }
+    },
+
+    pope : {
+        name : "LINE OF LIGHT",
+        charges: 3,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.pope.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.pope.name}!`);
+                return;
+            }
+
+            const row = getRow(piece.parentElement.getAttribute('square-id')); 
+            const allSquares = Array.from(document.querySelectorAll(`.square`));
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+
+            const rowSquares = allSquares.filter(square => {
+                const id = square.getAttribute('square-id');
+                return id && getRow(id) === row;
+            });
+
+            rowSquares.forEach(square => {
+                const piece = square.querySelector('.fantasy-piece');
+
+                if (piece && piece.classList.contains(color)) {
+                    piece.dataset.divineProtected = Infinity;
+                    piece.classList.add('divine-shield');
+                }
+                square.classList.add('divine-upgrade');
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('divine-upgrade');
+                }, { once: true });
+            });
+
+            console.log(`🔔 Pope cast ${specialAbilityMap.pope.name}, granting Divine Protection across the row!`);
+
+            specialAbilityMap.pope.charges -= 1;
+            console.log(`🕊️ Remaining sacred charges: ${specialAbilityMap.pope.charges}`);  
+            updateSquares();
+            finished();
+        }
+    },
+
+    kraken : {
+        name : "DROWNED ASCENT",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.kraken.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.kraken.name}!`);
+                return;
+            }
+
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+            const enemyColor = color === 'white' ? 'black' : 'white';
+            const squares = document.querySelectorAll('.square');
+
+            squares.forEach(square => {
+                if (!square.classList.contains('water')) return;
+
+                const target = square.querySelector('.fantasy-piece');
+                if (!target) return;
+
+                const type = target.id;
+                const isEnemy = target.classList.contains(enemyColor);
+                const isEvolved = target.classList.contains('evolved');
+
+                if (isEnemy) {
+                    if (isEvolved && devolutionMap[type]) {
+
+                        const devolvedHTML = devolutionMap[type];
+                        const temp = document.createElement('div');
+                        temp.innerHTML = devolvedHTML.trim();
+                        const devolvedElement = temp.firstChild;
+
+                        devolvedElement.classList.add(enemyColor);
+                        devolvedElement.classList.add('devolve-flare');
+
+                        square.replaceChild(devolvedElement, target);
+
+                        devolvedElement.addEventListener('animationend', () => {
+                            devolvedElement.classList.remove('devolve-flare');
+                        }, { once: true });
+
+                    } else {
+
+                        target.classList.add('devolve-flare');
+
+                        target.addEventListener('animationend', () => {
+                            target.classList.remove('devolve-flare');
+                                if (square.contains(target)) {
+                                    square.removeChild(target);
+                                }
+                        }, { once: true });
+                    }
+                }
+            });
+
+            console.log(`🦑 Kraken casted ${specialAbilityMap.kraken.name}!`);
+
+            specialAbilityMap.kraken.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.kraken.charges}`);
+            updateSquares();
+            finished();
+        }
+    },
+
+    thunder : {
+        name : "EYE OF THE STORM",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.thunder.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.thunder.name}!`);
+                return;
+            }
+
+            const middleRows = [width / 2 - 2, width / 2 - 1, width / 2, width / 2 + 1];
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+            
+            const onClick = (e) => {
+
+                const origin = e.target.closest('.square');
+                if (!origin) return;
+
+                const originId = origin.getAttribute('square-id');
+                const row = getRow(originId)
+
+                if (!middleRows.includes(row)) {
+                    console.log("⚡ You must choose a square in the middle 4 rows.");
+                    return;
+                }
+
+                document.removeEventListener('click', onClick);
+
+                specialAbilityMap.thunder.charges -= 1;
+                console.log(`⚡ ${specialAbilityMap.thunder.name} cast!`);
+                console.log(`⚡ Charges remaining: ${specialAbilityMap.thunder.charges}`);
+
+                const centerCol = getCol(originId)
+                const centerRow = getRow(originId)
+                const strikeOffsets = [
+                    [-1, -1], [0, -1], [1, -1],
+                    [-1, 0],           [1, 0],
+                    [-1, 1],  [0, 1],  [1, 1],
+                    [0, -2], [0, 2], [-2, 0], [2, 0]
+                ];
+
+                const strikeSquares = [];
+
+                strikeOffsets.forEach(([dx, dy]) => {
+                    const newCol = centerCol + dx;
+                    const newRow = centerRow + dy;
+                    const id = newRow * width + newCol;
+
+                    if (newCol >= 0 && newCol < width && newRow >= 0 && newRow < width) {
+                        const target = document.querySelector(`[square-id="${id}"]`);
+
+                        if (target) {
+                            strikeSquares.push(target);
+                        }
+                    }
+                });
+
+                strikeSquares.forEach(strikeSquare => {
+                    strikeSquare.classList.add('lightning-strike');
+
+                    const targetPiece = strikeSquare.querySelector('.fantasy-piece');
+                    if (targetPiece) {
+
+                        if (!targetPiece.classList.contains(color)) {
+                            strikeSquare.removeChild(targetPiece);
+                            updateSquares();
+                        }
+                    }
+
+                    strikeSquare.addEventListener('animationend', () => {
+                        strikeSquare.classList.remove('lightning-strike');
+                    }, { once: true });
+                });
+
+                if (gameState.eyeOfStorm.square) {
+                    gameState.eyeOfStorm.square.classList.remove('eye-of-storm');
+                }
+
+                origin.classList.add('eye-of-storm');
+                gameState.eyeOfStorm.square = origin;
+                gameState.eyeOfStorm.tracker.clear();
+
+                const eyePiece = origin.querySelector('.fantasy-piece');
+
+                if (eyePiece) {
+                    gameState.eyeOfStorm.tracker.set(eyePiece, 0);
+                }
+
+                finished();
+            };
+
+            document.addEventListener('click', onClick);
+        }
+    },
+
+    mace : {
+        name : "MACE OF THE GODS",
+        charges: 5,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.mace.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.mace.name}!`);
+                return;
+            }
+
+            const originId = Number(piece.parentElement.getAttribute('square-id'));
+            const startRow = getRow(originId);
+            const startCol = getCol(originId);
+
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+
+            const maceHits = [
+                [-2, 0], [2, 0], [0, -2], [0, 2],
+                [-1, -1], [-1, 1], [1, -1], [1, 1]
+            ];
+
+            for (const [dx, dy] of maceHits) {
+
+                const row = startRow + dx;
+                const col = startCol + dy;
+                
+                if (row < 0 || row >= width || col < 0 || col >= width) continue;
+
+                const targetId = row * width + col;
+                const targetSquare = document.querySelector(`[square-id="${targetId}"]`);
+                const target = targetSquare?.querySelector('.fantasy-piece');
+                
+                targetSquare.classList.add('mace-hit');
+
+                if (targetSquare && target && !target.classList.contains(color)) {
+                    targetSquare.removeChild(target)
+                }
+
+                targetSquare.addEventListener('animationend', () => {
+                    targetSquare.classList.remove('mace-hit');
+                }, { once: true });
+
+                updateSquares();
+                
+            };
+
+            console.log(`💥 Mace used ${specialAbilityMap.mace.name}!`);
+
+            specialAbilityMap.mace.charges -= 1;
+            console.log(`Charges remaining: ${specialAbilityMap.mace.charges}`);
+            updateSquares();
+            finished();
+        }
+    },
+
+    witch : {
+        name : "HEXSHIFT",
+        charges: 3,
+        effect: function (piece, finished) {
+
+            if (specialAbilityMap.witch.charges <= 0) {
+                console.log(`No charges left for ${specialAbilityMap.witch.name}!`);
+                return;
+            }
+
+            console.log("Select a magic square to relocate...");
+
+            const magicSquares = document.querySelectorAll('.square.magic');
+            magicSquares.forEach(square => square.classList.add('witch-highlight'));
+
+            const onMagicClick = (e) => {
+                const selectedMagicSquare = e.currentTarget;
+                magicSquares.forEach(s => s.classList.remove('witch-highlight'));
+                magicSquares.forEach(s => s.removeEventListener('click', onMagicClick));
+
+                const allSquares = document.querySelectorAll('.square');
+                allSquares.forEach(square => square.classList.add('witch-highlight-destination'));
+
+                const onDestinationClick = (e2) => {
+                    const targetSquare = e2.currentTarget;
+
+                    allSquares.forEach(s => s.classList.remove('witch-highlight-destination'));
+                    allSquares.forEach(s => s.removeEventListener('click', onDestinationClick));
+                    
+                    selectedMagicSquare.classList.remove('magic');
+
+                    if (targetSquare.classList.contains('magic') || selectedMagicSquare === targetSquare) {
+                        selectedMagicSquare.classList.add('magic');
+                        return;
+                    }
+
+                    targetSquare.classList.add('magic');
+
+                    selectedMagicSquare.classList.add('hexshift-flash');
+                    targetSquare.classList.add('hexshift-flash');
+
+                    selectedMagicSquare.addEventListener('animationend', () => {
+                        selectedMagicSquare.classList.remove('hexshift-flash');
+                        targetSquare.classList.remove('hexshift-flash');
+                    })
+
+                    console.log(`🔮 Witch used ${specialAbilityMap.witch.name} to shift magic square to ${targetSquare.getAttribute('square-id')}!`);
+                    
+                    specialAbilityMap.witch.charges -= 1;
+                    console.log(`Charges remaining: ${specialAbilityMap.witch.charges}`);
+                    updateSquares();
+                    finished();
+                };
+
+                allSquares.forEach(square => {
+                    square.addEventListener('click', onDestinationClick, { once: true });
+                });
+            };
+
+            magicSquares.forEach(square => {
+                square.addEventListener('click', onMagicClick, { once: true });
+            });
+        }
+    }
+}
+
+const ultimateAbilityMap = {
+
+    alien : {
+        name : "UFO SHOWER",
+        charges: 3,
+        effect: function (piece, finished) {
+
+            if (ultimateAbilityMap.alien.charges <= 0) {
+                console.log(`No charges left for ${ultimateAbilityMap.alien.name}!`);
+                return;
+            }
+
+            const allSquares = document.querySelectorAll(`[square-id]`);
+            const numberOfTargets = Math.floor(Math.random() * 20) + 40;
+            const selectedSquares = [];
+
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+
+            while (selectedSquares.length < numberOfTargets) {
+                const randomSquare = allSquares[Math.floor(Math.random() * allSquares.length)];
+                if (!selectedSquares.includes(randomSquare)) {
+                    selectedSquares.push(randomSquare);
+                }
+            }
+
+            selectedSquares.forEach((square, i) => {
+                setTimeout(() => {
+                    square.classList.add('alien-beam');
+
+                    setTimeout(() => {
+                        const target = square.querySelector('.piece, .fantasy-piece');
+                        if (target && !target.id.includes('alien')) {
+                            square.removeChild(target);
+                            updateSquares();
+                        }
+                            square.classList.remove('alien-beam');
+                    }, 800);
+                }, i * 100);
+            });
+
+            console.log(`🛸 ALIEN launched ${ultimateAbilityMap.alien.name} on ${numberOfTargets} squares!`);
+            
+            ultimateAbilityMap.alien.charges -= 1;
+            console.log(`Charges remaining: ${ultimateAbilityMap.alien.charges}`);
+            finished();
+        }
+    },
+
+    anubis : {
+
+    },
+
+    reaper : {
+        name : "SOUL ROULETTE",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (ultimateAbilityMap.reaper.charges <= 0) {
+                console.log(`No charges left for ${ultimateAbilityMap.reaper.name}!`);
+                return;
+            }
+
+            const squares = document.querySelectorAll('.square');
+
+            squares.forEach(square => {
+
+                const target = square.firstChild;
+                if (!target) return;
+
+                if (target.classList.contains('evolved') | target.classList.contains('ultimate')) return;
+
+                square.classList.add('reaper-strike');
+
+                square.removeChild(target);
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('reaper-strike');
+                }, { once: true });
+
+                // don't think this is necessary but good practice..?
+                updateSquares();
+
+            });
+
+            console.log(`☠️ REAPER used ${ultimateAbilityMap.reaper.name}!`);
+            
+            ultimateAbilityMap.reaper.charges -= 1;
+            console.log(`Charges remaining: ${ultimateAbilityMap.reaper.charges}`);
+            finished();
+        }
+    },
+
+    sagrada : {
+        name : "SACRED EVOLUTION",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (ultimateAbilityMap.sagrada.charges <= 0) {
+                console.log(`No charges left for ${ultimateAbilityMap.sagrada.name}!`);
+                return;
+            }
+
+            const color = piece.classList.contains('white') ? 'white' : 'black';
+            const squares = document.querySelectorAll('.square');
+
+            squares.forEach(square => {
+                
+                const target = square.firstChild;
+                if (!target || target.classList.contains('evolved') || !target.classList.contains(color)) return;
+
+                const targetId = target.id;
+                const targetColor = target.classList.contains('white') ? 'white' : 'black';
+
+                if (!(targetId in evolutionMap)) return;
+
+                const evolvedHTML = evolutionMap[targetId];
+                const temp = document.createElement('div');
+                temp.innerHTML = evolvedHTML.trim();
+                const evolvedPiece = temp.firstChild;
+                evolvedPiece.classList.add(targetColor);
+                
+                evolvedPiece.classList.add('evolution-flare');
+                
+                square.replaceChild(evolvedPiece, target);
+
+                evolvedPiece.addEventListener('animationend', () => {
+                    evolvedPiece.classList.remove('evolution-flare');
+                }, { once: true });
+
+                updateSquares();
+            });
+
+            console.log(`🪽 SAGRADA used ${ultimateAbilityMap.sagrada.name}!`);
+            
+            ultimateAbilityMap.sagrada.charges -= 1;
+            console.log(`Charges remaining: ${ultimateAbilityMap.sagrada.charges}`);
+            finished();
+        }
+    },
+
+    darkVoid : {
+        name: "DISORDER",
+        charges: 2,
+        effect: function (piece, finished) {
+
+            if (ultimateAbilityMap.darkVoid.charges <= 0) {
+                console.log(`No charges left for ${ultimateAbilityMap.darkVoid.name}!`);
+                return;
+            }
+
+            const allSquares = Array.from(document.querySelectorAll('.square'));
+            const allPieces = [];
+
+            allSquares.forEach(square => {
+                const piece = square.querySelector('.fantasy-piece');
+                if (piece) {
+                    allPieces.push(piece);
+                    square.removeChild(piece);
+                }
+                square.classList.add('void-chaos');
+
+                square.addEventListener('animationend', () => {
+                    square.classList.remove('void-chaos');
+                }, { once: true });
+            });
+
+            for (let i = allPieces.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allPieces[i], allPieces[j]] = [allPieces[j], allPieces[i]];
+            }
+
+            const shuffledSquares = [...allSquares];
+            for (let i = shuffledSquares.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledSquares[i], shuffledSquares[j]] = [shuffledSquares[j], shuffledSquares[i]];
+            }
+
+            for (let i = 0; i < allPieces.length; i++) {
+                shuffledSquares[i].appendChild(allPieces[i]);
+            }
+
+            console.log(`🌑🌀🕳️ DARK VOID cast ${ultimateAbilityMap.darkVoid.name}, the board has been shuffled!`);
+
+            ultimateAbilityMap.darkVoid.charges -= 1;
+            console.log(`Charges remaining: ${ultimateAbilityMap.darkVoid.charges}`);
+            updateSquares();
+            finished();
+        }
+    }
+}
+
+const conjureAbilityMap = {
+    // TODO
+    bat : {
+
+    },
+
+    spirit : {
+
+    },
+
+    candle : {
+
     }
 }
 
@@ -1415,13 +3527,33 @@ document.addEventListener('keydown', (e) => {
     if (!canCastAbility) {
         return;
     }
+    // if (!selectedPiece.parentElement.classList.contains('magic')) {
+    //     console.log('You must be on a magic square to cast an ability!');
+    //     return;
+    // }
     
     let pieceId = selectedPiece.id;
 
-    if (selectedPiece.classList.contains('evolved')) {
-        pieceId = devolutionMap[selectedPiece.id];
+    if (selectedPiece.classList.contains('evolved') || !(selectedPiece.id in evolutionMap)) {
+        const devolutionHTML = devolutionMap[pieceId];
+
+        if (devolutionHTML) {
+            const temp = document.createElement('div');
+            temp.innerHTML = devolutionHTML.trim();
+            const baseElement = temp.firstChild;
+
+            if (baseElement) {
+                pieceId = baseElement.id;
+            }
+        }
     }
-    const ability = abilityMap[pieceId];
+
+    let ability = abilityMap[pieceId];
+
+    if (selectedPiece.classList.contains('conjure')) {
+        ability = conjureAbilityMap[pieceId];
+    }
+
     const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
 
     if (pieceColor !== playerTurn) {
@@ -1439,7 +3571,7 @@ document.addEventListener('keydown', (e) => {
 
             setTimeout(() => {
                 canCastAbility = true;
-            }, 1500);
+            }, abilityDelay);
 
         });
     }
@@ -1454,9 +3586,50 @@ document.addEventListener('keydown', (e) => {
     if (!canCastSpecialAbility || !selectedPiece.classList.contains('evolved')) {
         return;
     }
+    // if (!selectedPiece.parentElement.classList.contains('magic')) {
+    //     console.log('You must be on a magic square to cast an ability!');
+    //     return;
+    // }
 
     const pieceId = selectedPiece.id;
     const ability = specialAbilityMap[pieceId];
+    const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
+
+    if (pieceColor !== playerTurn) {
+        console.log(`It's ${playerTurn}'s turn! Cannot cast this ability!`);
+        return;
+    }
+
+    if (ability) {
+        
+        ability.effect(selectedPiece, () => {
+            changePlayer();
+            
+            canCastSpecialAbility = false;
+
+            setTimeout(() => {
+                canCastSpecialAbility = true;
+            }, abilityDelay);
+
+        });
+    }
+  }
+});
+
+// special abilities for ultimate units
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'u' && selectedPiece) {
+
+    if (!canCastUltimateAbility || !selectedPiece.classList.contains('ultimate')) {
+        return;
+    }
+    // if (!selectedPiece.parentElement.classList.contains('magic')) {
+    //     console.log('You must be on a magic square to cast an ability!');
+    //     return;
+    // }
+
+    const pieceId = selectedPiece.id;
+    const ability = ultimateAbilityMap[pieceId];
     const pieceColor = selectedPiece.classList.contains('white') ? 'white' : 'black';
 
     if (pieceColor !== playerTurn) {
@@ -1470,31 +3643,210 @@ document.addEventListener('keydown', (e) => {
             changePlayer();
             
             // time delay between abilities
-            canCastSpecialAbility = false;
+            canCastUltimateAbility = false;
 
             setTimeout(() => {
-                canCastSpecialAbility = true;
-            }, 1500);
+                canCastUltimateAbility = true;
+            }, abilityDelay);
 
         });
     }
-
   }
 });
-
 
 function isFantasyPiece(piece) {
   return piece.classList.contains('fantasy-piece');
 }
 
-function updateEvolvedSquares() {
+function updateSquares() {
+    
+    checkVoidValidity();
+    checkSwampValidity();
+    checkMagicValidity();
+    checkWaterValidity();
+    checkLavaValidity();
+
+    checkDivineProtection();
+    checkStormValidity();
+    linkSwampPortals();
+
     document.querySelectorAll('#fantasy-gameboard .square').forEach(square => {
         const piece = square.querySelector('.fantasy-piece');
+
         if (piece && piece.classList.contains('evolved')) {
             square.classList.add('evolved');
+
+        } else if (piece && piece.classList.contains('ultimate')) {
+            if (piece.classList.contains('white')) {
+                square.classList.add('lightUltimate');
+            } else {
+                square.classList.add('shadowUltimate');            
+            }
+
         } else {
             square.classList.remove('evolved');
+            square.classList.remove('lightUltimate', 'shadowUltimate');
         }
+        
+        square.firstChild?.setAttribute('draggable', true) 
+    });
+}
+
+function updateGameState() {
+    gameState.currentPlayer = playerTurn;
+    gameState.selectedPiece = selectedPiece;
+    gameState.turnCount += 1;
+}
+
+function restoreInteraction() {
+    document.querySelectorAll('.fantasy-piece').forEach(p => {
+        p.style.pointerEvents = '';
+    });
+}
+
+function checkVoidValidity() {
+    const voidSquares = document.querySelectorAll('.square.void-chaos');
+
+    voidSquares.forEach(square => {
+
+        if (square.classList.contains('swamp-portal')) {
+            square.classList.remove('swamp-portal')
+            setTimeout(() => {
+                square.classList.add('swamp-portal')
+            }, 1200);
+        }
+        if (square.classList.contains('water')) {
+            square.classList.remove('water')
+            setTimeout(() => {
+                square.classList.add('water')
+            }, 1200);
+        }
+        if (square.classList.contains('lava')) {
+            square.classList.remove('lava')
+            setTimeout(() => {
+                square.classList.add('lava')
+            }, 1200);
+        }
+        if (square.classList.contains('magic')) {
+            square.classList.remove('magic')
+            setTimeout(() => {
+                square.classList.add('magic')
+            }, 1200);
+        }
+    });
+}
+
+function checkSwampValidity() {
+    const swampSquares = document.querySelectorAll('.square.swamp-portal');
+
+    swampSquares.forEach(square => {
+
+        if (square.classList.contains('water')) {
+            square.classList.remove('water')
+        }
+        if (square.classList.contains('lava')) {
+            square.classList.remove('lava')
+        }
+        if (square.classList.contains('magic')) {
+            square.classList.remove('magic')
+        }
+    });
+}
+
+function checkWaterValidity() {
+    const waterSquares = document.querySelectorAll('.square.water');
+
+    waterSquares.forEach(square => {
+
+        if (square.classList.contains('lava')) {
+            square.classList.remove('lava')
+        }
+
+        const piece = square.querySelector('.fantasy-piece');
+
+        if (piece && piece.dataset.waterWalking !== 'true') {
+
+            piece.classList.add('drown-animation');
+
+            piece.addEventListener('animationend', () => {
+                piece.classList.remove('drown-animation');
+                if (piece.parentElement) {
+                    piece.remove();
+                    square.classList.remove('evolved', 'lightUltimate', 'shadowUltimate');
+                }
+            }, { once: true });
+        }
+    });
+}
+
+function checkLavaValidity() {
+    const lavaSquares = document.querySelectorAll('.square.lava');
+
+    lavaSquares.forEach(square => {
+        const piece = square.querySelector('.fantasy-piece');
+
+        if (piece && piece.dataset.fireproof !== 'true') {
+            piece.classList.add('burn-animation');
+
+            piece.addEventListener('animationend', () => {
+                piece.classList.remove('burn-animation');
+                if (piece.parentElement) {
+                    piece.remove();
+                    square.classList.remove('evolved', 'lightUltimate', 'shadowUltimate');
+                }
+            }, { once: true });
+        }
+    });
+}
+
+function checkMagicValidity() {
+    // ensures that there is no overlay, so for example, if a piece is on a magic square, it cannot be also water or lava
+    const magicSquares = document.querySelectorAll('.square.magic');
+
+    magicSquares.forEach(square => {
+
+        square.classList.remove('water');
+        square.classList.remove('lava');
+
+    });
+}
+
+function checkDivineProtection() {
+    document.querySelectorAll('.fantasy-piece').forEach(piece => {
+
+        if (piece.dataset.divineProtected) {
+            piece.classList.add('divine-shield');
+        } else {
+            piece.classList.remove('divine-shield');
+        }
+
+    });
+}
+
+function checkStormValidity() {
+    document.querySelectorAll('#fantasy-gameboard .square').forEach(square => {
+        // Reset visual if it's not the active Eye
+        if (square !== gameState.eyeOfStorm.square) {
+            square.classList.remove('eye-of-storm');
+            return;
+        }
+
+        square.classList.add('eye-of-storm');
+
+        const currentEyePiece = square.querySelector('.fantasy-piece');
+        const tracker = gameState.eyeOfStorm.tracker;
+
+        if (!currentEyePiece) {
+            tracker.clear();
+            return;
+        }
+
+        const existingPiece = Array.from(tracker.keys())[0];
+        if (existingPiece !== currentEyePiece) {
+            tracker.clear();
+            tracker.set(currentEyePiece, 0);
+        }
+
     });
 }
 
@@ -1643,6 +3995,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// selection piece glow for fantasy-piece
 document.addEventListener('click', (e) => {
   const piece = e.target.closest('.fantasy-piece');
 
@@ -1653,6 +4006,7 @@ document.addEventListener('click', (e) => {
   if (piece) {
     selectedPiece = piece;
     selectedPiece.classList.add('select-glow');
+    gameState.selectedPiece = selectedPiece;
 
     const name = selectedPiece.id || 'Unknown';
     const color = selectedPiece.classList.contains('white') ? 'white' : 'black';

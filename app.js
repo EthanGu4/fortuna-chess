@@ -270,6 +270,7 @@ function dragDrop(e) {
 
     const captured = toSquare.querySelector('.piece');
     const fantasyCaptured = toSquare.querySelector('.fantasy-piece');
+    const evolutionGem = toSquare.querySelector('.evolution-gem');
 
     fromSquare.removeChild(draggedElement);
 
@@ -330,9 +331,17 @@ function dragDrop(e) {
 
         }, captureDelay);
 
-    } else {
-        toSquare.appendChild(draggedElement);
+    } else if (evolutionGem) {
 
+        toSquare.appendChild(draggedElement);
+        runGameChecks(toSquare);
+        updateSquares();
+        changePlayer();
+        checkGameStatus();
+
+    } else {
+
+        toSquare.appendChild(draggedElement);
         runGameChecks(toSquare);
         updateSquares();
         changePlayer();
@@ -529,7 +538,6 @@ function checkIfValid(piece, from, to) {
             break;
 
         case 'rook':
-        case 'phoenix':
             const rookMoves = [
                 [-1, 0], 
                 [1, 0],  
@@ -569,12 +577,22 @@ function checkIfValid(piece, from, to) {
 
             break;
         
-        case 'pirateKing':
-        case 'mace':
-        case 'whale':
+        case 'dynamite':
+        case 'phoenix':
+        case 'koi':
         case 'crocodile':
-        case 'witch':
+        case 'hamsa':
         case 'violin':
+        case 'sith':
+        case 'joker':
+        case 'zulfiqar':
+        case 'whale':
+        case 'pirateKing':
+        case 'pope':
+        case 'kraken':
+        case 'thunder':
+        case 'mace':
+        case 'witch':
         case 'queen':
             let queenMoves = [
                 [-1, -1],
@@ -665,6 +683,66 @@ function checkIfValid(piece, from, to) {
 
         // FANTASY CASES
 
+        case 'dragon':
+        case 'fish':
+        case 'gryphon':
+        case 'guitar':
+        case 'jedi':
+        case 'jester':
+        case 'khanda':
+        case 'priest':
+        case 'tornado':
+        case 'wizard': {
+            const colDiff = Math.abs((startId % width) - (targetId % width));
+            const rowDiff = Math.abs(Math.floor(startId / width) - Math.floor(targetId / width));
+
+            if (colDiff <= 1 && rowDiff <= 1 && (colDiff + rowDiff !== 0)) {
+                return true;
+            }
+
+            break;
+        }
+
+        case 'bomb':
+            const bombMoves = [
+                [-1, 0], 
+                [1, 0],  
+                [0, -1], 
+                [0, 1] 
+            ]
+
+            for (const [rowDirection, colDirection] of bombMoves) {
+                let row = getRow(startId)
+                let col = getCol(startId)
+
+                while (true) {
+                    row += rowDirection
+                    col += colDirection
+
+                    if (row < 0 || row >= width || col < 0 || col >= width) {
+                        break;
+                    }
+
+                    const nextId = row * width + col
+                    const square = document.querySelector(`[square-id="${nextId}"]`)
+                    const piece = square.firstChild
+
+                    if (nextId === targetId) {
+                        if (!piece || !piece.classList.contains(pieceColor)) {
+                            return true
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (piece) {
+                        break;
+                    }
+                }
+            }
+
+            break;
+
         case 'pirate':
             const startPirateRow = Array.from({ length: width }, (_, i) => 1 * width + i);
             const startPirateCol = getCol(startId);
@@ -753,7 +831,7 @@ function checkIfValid(piece, from, to) {
                 let row = startVikingRow + 1;
                 let col = startVikingCol + dx;
 
-                if (row < 0 || row >= width || col < 0 || col >= width) return;
+                if (row < 0 || row >= width || col < 0 || col >= width) continue;
 
                 const captureId = row * width + col;
 
@@ -846,6 +924,19 @@ function undoMove(fromSquare, toSquare, movedPiece, capturedPiece = null) {
 }
 
 function changePlayer() {
+
+    if (!gameBoardClassic.classList.contains('hidden')) {
+        if (playerTurn === 'black') {
+            reverseIds();
+            playerTurn = 'white';
+        } else {
+            revertIds();
+            playerTurn = 'black';
+        }
+        console.log('reached')
+        return;
+    }
+        
     const state = guitarState[playerTurn];
     const protectedPieces = Array.from(document.querySelectorAll('.fantasy-piece'))
         .filter(p => p.dataset.divineProtected !== undefined);
@@ -898,6 +989,8 @@ function changePlayer() {
         console.log(`${playerTurn} has ENCORE active! Two moves this turn.`);
     }
 
+    if (selectedPiece) selectedPiece.classList.remove('select-glow');
+
     updateSquares();
     updateGameState();
     playerDisplay.textContent = playerTurn;
@@ -906,6 +999,7 @@ function changePlayer() {
         console.log('Turn: ' + gameState.turnCount);
     }
 
+    handleTurnBasedEffects();
 }
 
 function reverseIds() {
@@ -1016,6 +1110,8 @@ function hasAnyLegalMoves(playerColor) {
 
 const gameState = {
     currentPlayer: 'white',
+    whitePieces: null,
+    blackPieces: null,
     selectedPiece: null,
     eyeOfStorm: {
         square: null,
@@ -1026,8 +1122,18 @@ const gameState = {
         teleportWatcher: null 
     },
     turnCount: 0,
-    specialEffects: [],
     gameOver: false,
+    specialEffects: [],
+    isRaining: false,
+    rainTurnsLeft: 0,
+    tsunami: {
+        active: false,
+        currentStep: 0,
+        rows: [],
+        totalCols: 0,
+        stepSize: 4,
+        turnsUntilStart: 3,
+    },
     abilityCharges: {
 
     }
@@ -1061,7 +1167,38 @@ function handleFantasyCapture(targetSquare, target) {
         changePlayer();
         return false;
     }
+
+    if (target.id === 'bomb' || target.id === 'dynamite') {
+        bombImplode(target);
+    }
     
+    return true;
+}
+
+function handleAbilityCapture(targetSquare, target) {
+    
+    if (!target) {
+        console.log('No target piece to capture!');
+        return false;
+    }
+
+    if (target.dataset.divineProtected) {
+
+        targetSquare.classList.add('shield-block');
+        targetSquare.addEventListener('animationend', () => {
+            targetSquare.classList.remove('shield-block');
+            delete target.dataset.divineProtected;
+            target.classList.remove('divine-shield');
+        }, { once: true });
+        
+        return false;
+    }
+    
+    if (target.id === 'bomb' || target.id === 'dynamite') {
+        bombImplode(target);
+        return false;
+    }
+
     return true;
 }
 
@@ -1128,6 +1265,77 @@ function linkSwampPortals() {
 }
 
 // PASSIVES
+function bombImplode(piece) {
+
+    const originId = Number(piece.parentElement.getAttribute('square-id'));
+    const col = originId % width;
+    const row = Math.floor(originId / width);
+
+    triggerExplosion(row, col);
+
+    function triggerExplosion(row, col) {
+        const splashRadius = [-1, 0, 1];
+        const affectedSquares = [];
+
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 400);
+
+        splashRadius.forEach(dy => {
+            splashRadius.forEach(dx => {
+                const r = row + dy;
+                const c = col + dx;
+                if (r >= 0 && r < width && c >= 0 && c < width) {
+                    const targetId = r * width + c;
+                    const square = document.querySelector(`[square-id="${targetId}"]`);
+                    if (square) affectedSquares.push(square);
+                }
+            });
+        });
+
+        affectedSquares.forEach((square, i) => {
+            setTimeout(() => {
+                square.classList.add('explosion-zone');
+
+                const target = square.querySelector('.piece, .fantasy-piece');
+                if (target) {
+                    if (!square.contains(piece)) {
+                        if (handleAbilityCapture(square, target)) {
+                            square.removeChild(target);
+                        }
+                    } else {
+                        square.removeChild(target);
+                    }
+
+                    updateSquares();
+                }
+
+                const explosion = document.createElement('div');
+                explosion.textContent = '💥';
+                explosion.style.position = 'absolute';
+                explosion.style.top = '50%';
+                explosion.style.left = '50%';
+                explosion.style.transform = 'translate(-50%, -50%) scale(2.2)';
+                explosion.style.fontSize = '3.5rem';
+                explosion.style.pointerEvents = 'none';
+                explosion.style.zIndex = '999';
+                explosion.style.animation = 'cannon-pulse-glow 0.5s ease-out';
+
+                const ring = document.createElement('div');
+                ring.classList.add('explosion-ring');
+                square.appendChild(ring);
+                square.appendChild(explosion);
+
+                setTimeout(() => {
+                    explosion.remove();
+                    ring.remove();
+                    square.classList.remove('explosion-zone');
+                }, 600);
+            }, i * 100);
+        });
+
+    }
+}
+
 function handleOtterEvasion(otter, originSquare) {
 
     const waterSquares = Array.from(document.querySelectorAll('.square.water'));
@@ -1177,7 +1385,7 @@ function handlePhoenixRebirth(phoenix, originSquare) {
     escapeSquare.appendChild(phoenix);
 
     // this select-glow shit was the dumbest fucking fix i've ever seen
-    phoenix.classList.remove('select-glow')
+    // phoenix.classList.remove('select-glow')
     phoenix.classList.add('phoenix-rebirth');
     escapeSquare.classList.add('evasion-glow');
     phoenix.dataset.evasion = 'false';
@@ -1238,6 +1446,7 @@ let canCastAbility = true;
 let canCastSpecialAbility = true;
 let canCastUltimateAbility = true;
 let abilityDelay = 450;
+let turnDelay = 500;
 
 const guitarState = {
     white: { encoreNextTurn: false, encoreActive: false, movesUsed: 0 },
@@ -1251,6 +1460,7 @@ const abilityMap = {
         name : "DOWN THE LINE",
         charges: 3,
         effect: function (piece, finished) {
+
             if (abilityMap.bomb.charges <= 0) {
                 console.log(`No charges left for ${abilityMap.bomb.name}!`);
                 return;
@@ -1315,8 +1525,17 @@ const abilityMap = {
                         square.classList.add('explosion-zone');
 
                         const target = square.querySelector('.piece, .fantasy-piece');
+
                         if (target) {
-                            square.removeChild(target);
+
+                            if (!square.contains(piece)) {
+                                if (handleAbilityCapture(square, target)) {
+                                    square.removeChild(target);
+                                }
+                            } else {
+                                square.removeChild(target);
+                            }
+
                             updateSquares();
                         }
                         
@@ -1356,8 +1575,7 @@ const abilityMap = {
 
     dragon : {
         name : "LANE OF FIRE",
-        charges: 4,
-        // cooldown: 10,
+        charges: 40,
         effect: (piece, finished) => {
 
             if (abilityMap.dragon.charges <= 0) {
@@ -1378,7 +1596,9 @@ const abilityMap = {
                     if (col === randomCol) {
                         const target = square.querySelector('.piece, .fantasy-piece');
                         if (target && target.dataset.fireproof !== 'true') {
-                            square.removeChild(target);
+                            if (handleAbilityCapture(square, target)) {
+                                square.removeChild(target);
+                            } 
                             updateSquares();
                         }
                     }
@@ -1514,7 +1734,10 @@ const abilityMap = {
                 if (target && !target.classList.contains(playerTurn) && !target.classList.contains('evolved')) {
 
                     square.classList.add('gryphon-hit');
-                    square.removeChild(target);
+
+                    if (handleAbilityCapture(square, target)) {
+                        square.removeChild(target);
+                    }
 
                     setTimeout(() => {
                         square.classList.remove('gryphon-hit');
@@ -1704,7 +1927,9 @@ const abilityMap = {
 
                 target.addEventListener('animationend', () => {
                     if (square.contains(target)) {
-                        square.removeChild(target);
+                        if (handleAbilityCapture(square, target)) {
+                            square.removeChild(target);
+                        }
                     }
                     updateSquares();
                 }, { once: true });
@@ -1822,7 +2047,11 @@ const abilityMap = {
                     const target = targetSquare?.querySelector('.fantasy-piece');
 
                     if (target && !target.classList.contains(color)) {
-                        setTimeout(() => targetSquare.removeChild(target), 150);
+                        setTimeout(() => {
+                            if (handleAbilityCapture(targetSquare, target)) {
+                                targetSquare.removeChild(target);
+                            }
+                        }, 150);
                     }
 
                     setTimeout(() => updateSquares(), 200);
@@ -2030,7 +2259,9 @@ const abilityMap = {
                 targetSquare.classList.add('frost-smash');
 
                 if (targetSquare && target && !target.classList.contains(color)) {
-                    targetSquare.removeChild(target)
+                    if (handleAbilityCapture(targetSquare, target)) {
+                        targetSquare.removeChild(target);
+                    }
                 }
 
                 targetSquare.addEventListener('animationend', () => {
@@ -2168,7 +2399,15 @@ const specialAbilityMap = {
                                 const target = square.querySelector('.fantasy-piece');
 
                                 if (target) {
-                                    square.removeChild(target);
+
+                                    if (!square.contains(piece)) {
+                                        if (handleAbilityCapture(square, target)) {
+                                            square.removeChild(target);
+                                        }
+                                    } else {
+                                        square.removeChild(target);
+                                    }
+
                                     updateSquares();
                                 }
 
@@ -2231,7 +2470,11 @@ const specialAbilityMap = {
                         
                         target = square.querySelector('.fantasy-piece');
 
-                        if (target) square.removeChild(target);
+                        if (target) {
+                            if (handleAbilityCapture(square, target)) {
+                                square.removeChild(target);
+                            }
+                        }
 
                         square.addEventListener('animationend', () => {
                             square.classList.remove('explosion-zone');
@@ -2329,18 +2572,22 @@ const specialAbilityMap = {
                         const isWaterWalker = targetPiece.dataset.waterWalking === 'true';
 
                         if (isEnemy && !isWaterWalker) {
-                            square.removeChild(targetPiece)
-                            square.classList.add('water');
 
-                            const temp = document.createElement('div');
-                            temp.innerHTML = koi.trim();
-                            const koiClone = temp.firstChild;
-                            koiClone.setAttribute('draggable', true);
-                            koiClone.classList.add(pieceColor);
-                            koiClone.classList.remove('evolved');
+                            if (handleAbilityCapture(square, targetPiece)) {
+                                square.removeChild(targetPiece);
+                                
+                                square.classList.add('water');
 
-                            square.replaceChildren(koiClone);
-                            square.classList.add('square');
+                                const temp = document.createElement('div');
+                                temp.innerHTML = koi.trim();
+                                const koiClone = temp.firstChild;
+                                koiClone.setAttribute('draggable', true);
+                                koiClone.classList.add(pieceColor);
+                                koiClone.classList.remove('evolved');
+
+                                square.replaceChildren(koiClone);
+                                square.classList.add('square');
+                            }
 
                             updateSquares();
 
@@ -2727,7 +2974,9 @@ const specialAbilityMap = {
                         }
 
                         targetPiece.addEventListener('animationend', () => {
-                            square.removeChild(targetPiece);
+                            if (handleAbilityCapture(square, targetPiece)) {
+                                square.removeChild(targetPiece);
+                            }
                             targetPiece.classList.remove('musical-death');
                             targetPiece.classList.remove('outline-white');
                         }, { once: true });
@@ -2800,7 +3049,10 @@ const specialAbilityMap = {
                             }
                             
                         } else {
-                            square.removeChild(target);
+                            
+                            if (handleAbilityCapture(square, target)) {
+                                square.removeChild(target);
+                            }
                         }
                     }
 
@@ -2892,8 +3144,11 @@ const specialAbilityMap = {
                     square.classList.add('splash-zone');
 
                     const target = square.querySelector('.piece, .fantasy-piece');
+
                     if (target && target.dataset.waterWalking !== 'true') {
-                        square.removeChild(target);
+                        if (handleAbilityCapture(square, target)) {
+                            square.removeChild(target);
+                        }
                     }
 
                     // Splash emoji (optional)
@@ -2960,7 +3215,10 @@ const specialAbilityMap = {
                     setTimeout(() => {
                         const target = square.querySelector('.piece, .fantasy-piece');
                         if (target && !target.id.includes('pirateKing')) {
-                            square.removeChild(target);
+
+                            if (handleAbilityCapture(square, target)) {
+                                square.removeChild(target);
+                            }
                             updateSquares();
                         }
                             square.classList.remove('barrage-target');
@@ -3065,7 +3323,9 @@ const specialAbilityMap = {
                         target.addEventListener('animationend', () => {
                             target.classList.remove('devolve-flare');
                                 if (square.contains(target)) {
-                                    square.removeChild(target);
+                                    if (handleAbilityCapture(square, target)) {
+                                        square.removeChild(target);
+                                    }
                                 }
                         }, { once: true });
                     }
@@ -3145,7 +3405,10 @@ const specialAbilityMap = {
                     if (targetPiece) {
 
                         if (!targetPiece.classList.contains(color)) {
-                            strikeSquare.removeChild(targetPiece);
+
+                            if (handleAbilityCapture(strikeSquare, targetPiece)) {
+                                strikeSquare.removeChild(targetPiece);
+                            }
                             updateSquares();
                         }
                     }
@@ -3211,7 +3474,9 @@ const specialAbilityMap = {
                 targetSquare.classList.add('mace-hit');
 
                 if (targetSquare && target && !target.classList.contains(color)) {
-                    targetSquare.removeChild(target)
+                    if (handleAbilityCapture(targetSquare, target)) {
+                        targetSquare.removeChild(target);
+                    }
                 }
 
                 targetSquare.addEventListener('animationend', () => {
@@ -3524,13 +3789,13 @@ function flashColumn(colIndex, delay = 90) {
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'a' && selectedPiece) {
 
-    if (!canCastAbility) {
+    if (!canCastAbility || gameState.isRaining) {
         return;
     }
-    // if (!selectedPiece.parentElement.classList.contains('magic')) {
-    //     console.log('You must be on a magic square to cast an ability!');
-    //     return;
-    // }
+    if (!selectedPiece.parentElement.classList.contains('magic')) {
+        console.log('You must be on a magic square to cast an ability!');
+        return;
+    }
     
     let pieceId = selectedPiece.id;
 
@@ -3583,13 +3848,13 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'q' && selectedPiece) {
 
-    if (!canCastSpecialAbility || !selectedPiece.classList.contains('evolved')) {
+    if (!canCastSpecialAbility || !selectedPiece.classList.contains('evolved') || gameState.isRaining) {
         return;
     }
-    // if (!selectedPiece.parentElement.classList.contains('magic')) {
-    //     console.log('You must be on a magic square to cast an ability!');
-    //     return;
-    // }
+    if (!selectedPiece.parentElement.classList.contains('magic')) {
+        console.log('You must be on a magic square to cast an ability!');
+        return;
+    }
 
     const pieceId = selectedPiece.id;
     const ability = specialAbilityMap[pieceId];
@@ -3620,13 +3885,13 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'u' && selectedPiece) {
 
-    if (!canCastUltimateAbility || !selectedPiece.classList.contains('ultimate')) {
+    if (!canCastUltimateAbility || !selectedPiece.classList.contains('ultimate') || gameState.isRaining) {
         return;
     }
-    // if (!selectedPiece.parentElement.classList.contains('magic')) {
-    //     console.log('You must be on a magic square to cast an ability!');
-    //     return;
-    // }
+    if (!selectedPiece.parentElement.classList.contains('magic')) {
+        console.log('You must be on a magic square to cast an ability!');
+        return;
+    }
 
     const pieceId = selectedPiece.id;
     const ability = ultimateAbilityMap[pieceId];
@@ -3654,6 +3919,29 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+
+// lowk idk about this function...
+function castAbility(piece) {
+    
+    const pieceId = piece.id;
+
+    let ability = abilityMap[pieceId]
+
+    if (piece.classList.contains('ultimate')) {
+        ability = ultimateAbilityMap[pieceId];
+    } else if (piece.classList.contains('evolved')) {
+        ability = specialAbilityMap[pieceId];
+    } else if (piece.classList.contains('conjure')) {
+        ability = conjureAbilityMap[pieceId];
+    } 
+
+    if (ability) {
+        ability.effect(piece, () => {
+            updateSquares();
+        });
+    }
+}
+
 function isFantasyPiece(piece) {
   return piece.classList.contains('fantasy-piece');
 }
@@ -3669,6 +3957,7 @@ function updateSquares() {
     checkDivineProtection();
     checkStormValidity();
     linkSwampPortals();
+    evolvePiecesWithGems();
 
     document.querySelectorAll('#fantasy-gameboard .square').forEach(square => {
         const piece = square.querySelector('.fantasy-piece');
@@ -3696,8 +3985,334 @@ function updateGameState() {
     gameState.currentPlayer = playerTurn;
     gameState.selectedPiece = selectedPiece;
     gameState.turnCount += 1;
+    gameState.whitePieces = document.querySelectorAll('.fantasy-piece.white');
+    gameState.blackPieces = document.querySelectorAll('.fantasy-piece.black');
 }
 
+// TURN BASED EFFECTS
+function handleTurnBasedEffects() {
+
+    const currentTurn = gameState.turnCount;
+    
+    if (Math.random() < 0.07) {
+        spawnRandomMagicSquare();
+    }
+
+    if (
+        !gameState.specialEffects.includes("landslide") &&
+        currentTurn >= 16 &&
+        currentTurn <= 24 &&
+        Math.random() < 0.20 
+    ) {
+        triggerLandslide();
+        gameState.specialEffects.push("landslide");
+    }
+
+    if (gameState.turnCount >= 15 && Math.random() < 0.10) {
+        startRainstorm(5);
+    }
+
+    if (gameState.isRaining) {
+        gameState.rainTurnsLeft--;
+
+        if (gameState.rainTurnsLeft <= 0) {
+            stopRainstorm();
+        }
+    }
+
+    if (gameState.tsunami.active) {
+        handleTsunami();
+    }
+
+    if (gameState.turnCount >= 40 && Math.random() < 0.05) {
+        handleTsunami();
+    }
+
+    if (gameState.turnCount >= 20 && Math.random() < 0.125) {
+        spawnEvolutionGem();
+    }
+
+    if (gameState.turnCount >= 20 && Math.random() < 0.0625) {
+        triggerFateStorm();
+    }
+
+    updateSquares();
+}
+
+function spawnRandomMagicSquare() {
+    const allSquares = Array.from(document.querySelectorAll('.square'));
+    const emptySquares = allSquares.filter(square => 
+        !square.querySelector('.fantasy-piece') && !square.classList.contains('magic')
+    );
+
+    if (emptySquares.length === 0) return;
+
+    const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
+    randomSquare.classList.add('magic');
+
+    randomSquare.classList.add('magic-spawned');
+    
+    randomSquare.addEventListener('animationend', () => {
+        randomSquare.classList.remove('magic-spawned');
+    }, { once: true });
+
+    console.log("✨ A new magic square has appeared!");
+}
+
+function triggerLandslide() {
+    const direction = Math.random() < 0.5 ? 'left' : 'right';
+    console.log(`🌍 Landslide! Shifting board ${direction.toUpperCase()}...`);
+
+    for (let row = 0; row < width; row++) {
+        const piecesInRow = [];
+
+        for (let col = 0; col < width; col++) {
+            const squareId = row * width + col;
+            const square = document.querySelector(`[square-id="${squareId}"]`);
+            const piece = square?.querySelector('.fantasy-piece') || null;
+            piecesInRow.push(piece);
+        }
+
+        for (let col = 0; col < width; col++) {
+            const piece = piecesInRow[col];
+            if (!piece) continue;
+
+            let targetCol = direction === 'left' ? col - 1 : col + 1;
+
+            if (targetCol < 0 || targetCol >= width) {
+                const squareId = row * width + col;
+
+                const square = document.querySelector(`[square-id="${squareId}"]`);
+                if (square.contains(piece)) {
+                    square.removeChild(piece);
+                }
+                continue;
+            }
+
+            const targetId = row * width + targetCol;
+            const targetSquare = document.querySelector(`[square-id="${targetId}"]`);
+            if (!targetSquare) continue;
+
+            targetSquare.appendChild(piece);
+
+            piece.classList.add(direction === 'left' ? 'shift-from-right' : 'shift-from-left');
+
+            piece.addEventListener('animationend', () => {
+                piece.classList.remove('shift-from-right', 'shift-from-left');
+            }, { once: true });
+        }
+    }
+
+    flashLandslideEffect(direction);
+}
+
+function flashLandslideEffect(direction) {
+    const allSquares = document.querySelectorAll('.square');
+    allSquares.forEach(square => {
+        square.classList.add('landslide-effect');
+    });
+
+    setTimeout(() => {
+        allSquares.forEach(square => {
+            square.classList.remove('landslide-effect');
+        });
+    }, 800);
+}
+
+function startRainstorm(turns) {
+    gameState.isRaining = true;
+    gameState.rainTurnsLeft = turns;
+    console.log(`🌧️ Rainstorm begins! Abilities disabled for ${turns} turns.`);
+    
+    document.querySelector('#fantasy-gameboard').classList.add('rain-effect');
+}
+
+function stopRainstorm() {
+    gameState.isRaining = false;
+    console.log('🌤️ Rainstorm ends! Abilities restored.');
+    document.querySelector('#fantasy-gameboard').classList.remove('rain-effect');
+}
+
+function handleTsunami() {
+    if (!gameState.tsunami.active) {
+        if (gameState.turnCount >= gameState.tsunami.turnsUntilStart) {
+            // Activate tsunami
+            gameState.tsunami.active = true;
+            gameState.tsunami.currentStep = 0;
+
+            // Calculate middle 4 rows (assumes width is defined)
+            const midStart = Math.floor((width - 4) / 2);
+            gameState.tsunami.rows = [midStart, midStart + 1, midStart + 2, midStart + 3];
+            gameState.tsunami.totalCols = width;
+            
+            console.log("🌊 Tsunami activated!");
+        }
+    }
+
+    if (gameState.tsunami.active) {
+        const startCol = gameState.tsunami.currentStep * gameState.tsunami.stepSize;
+        const endCol = Math.min(startCol + gameState.tsunami.stepSize, width);
+
+        if (startCol >= width) {
+            gameState.tsunami.active = false;
+            console.log("🌊 Tsunami ended.");
+            return;
+        }
+
+        // Flood squares in the current step (4 columns wide) across the middle rows
+        for (const row of gameState.tsunami.rows) {
+            for (let col = startCol; col < endCol; col++) {
+                const squareId = row * width + col;
+                const square = document.querySelector(`[square-id="${squareId}"]`);
+                if (square) {
+                    square.classList.add('water');
+
+                    const piece = square.querySelector('.fantasy-piece');
+                    updateSquares();
+                }
+            }
+        }
+
+        gameState.tsunami.currentStep += 1;
+    }
+}
+
+function spawnEvolutionGem() {
+    const middleStartRow = Math.floor(width / 2) - 2; 
+    const middleEndRow = middleStartRow + 3;
+
+    const candidateSquares = [];
+    for (let row = middleStartRow; row <= middleEndRow; row++) {
+        for (let col = 0; col < width; col++) {
+            const squareId = row * width + col;
+            const square = document.querySelector(`[square-id="${squareId}"]`);
+            if (!square) continue;
+
+            if (!square.querySelector('.fantasy-piece') && !square.querySelector('.evolution-gem')) {
+                candidateSquares.push(square);
+            }
+        }
+    }
+
+    if (candidateSquares.length === 0) {
+        return;
+    }
+
+    const randomSquare = candidateSquares[Math.floor(Math.random() * candidateSquares.length)];
+
+    const gem = document.createElement('div');
+    gem.classList.add('evolution-gem');
+    gem.textContent = '🔷'; 
+    gem.style.fontSize = '24px';
+    gem.style.textAlign = 'center';
+    gem.style.userSelect = 'none';
+    gem.style.pointerEvents = 'auto'; 
+
+    randomSquare.appendChild(gem);
+
+    console.log("Evolution Gem spawned at", randomSquare.getAttribute('square-id'));
+}
+
+function evolvePiecesWithGems() {
+  const squares = document.querySelectorAll('.square');
+
+  squares.forEach(square => {
+    const gem = square.querySelector('.evolution-gem');
+    const piece = square.querySelector('.fantasy-piece');
+
+    if (!gem || !piece) return; 
+
+    if (piece.classList.contains('evolved')) return; 
+
+    const pieceColor = piece.classList.contains('white') ? 'white' : 'black';
+
+    if (piece.id in evolutionMap) {
+      const evolvedHTML = evolutionMap[piece.id];
+      const temp = document.createElement('div');
+      temp.innerHTML = evolvedHTML.trim();
+      const evolvedElement = temp.firstChild;
+
+      evolvedElement.classList.add(pieceColor);
+      evolvedElement.classList.add('evolved');
+
+      square.replaceChild(evolvedElement, piece);
+
+      evolvedElement.classList.add('evolution-flare');
+
+      evolvedElement.addEventListener('animationend', () => {
+        evolvedElement.classList.remove('evolution-flare');
+      }, { once: true });
+
+      gem.remove();
+
+      console.log(`Piece auto-evolved on square ${square.getAttribute('square-id')}`);
+    }
+  });
+}
+
+function triggerFateStorm() {
+
+    ['white', 'black'].forEach(color => {
+        const allPieces = Array.from(document.querySelectorAll(`.fantasy-piece.${color}`));
+        const evolved = allPieces.filter(piece => piece.classList.contains('evolved') && devolutionMap[piece.id]);
+        const basic = allPieces.filter(piece => !piece.classList.contains('evolved') && evolutionMap[piece.id]);
+
+        if (evolved.length > 0) {
+            const numToDevolve = Math.max(1, Math.floor(evolved.length * 0.5));
+            const chosen = [];
+
+            while (chosen.length < numToDevolve && evolved.length > 0) {
+                const index = Math.floor(Math.random() * evolved.length);
+                chosen.push(evolved.splice(index, 1)[0]);
+            }
+
+            chosen.forEach(piece => {
+                const square = piece.closest('.square');
+                const devolvedHTML = devolutionMap[piece.id];
+                const temp = document.createElement('div');
+                temp.innerHTML = devolvedHTML.trim();
+                const devolvedElement = temp.firstChild;
+
+                devolvedElement.classList.add(color, 'fate-storm-hit');
+                square.replaceChild(devolvedElement, piece);
+
+                devolvedElement.addEventListener('animationend', () => {
+                    devolvedElement.classList.remove('fate-storm-hit');
+                }, { once: true });
+            });
+
+            console.log(`⚡ ${color.toUpperCase()}: ${chosen.length} piece(s) devolved by Fate Storm.`);
+        
+        } else if (basic.length > 0) {
+            const numToEvolve = Math.min(2, basic.length);
+            const chosen = [];
+
+            while (chosen.length < numToEvolve && basic.length > 0) {
+                const index = Math.floor(Math.random() * basic.length);
+                chosen.push(basic.splice(index, 1)[0]);
+            }
+
+            chosen.forEach(piece => {
+                const square = piece.closest('.square');
+                const evolvedHTML = evolutionMap[piece.id];
+                const temp = document.createElement('div');
+                temp.innerHTML = evolvedHTML.trim();
+                const evolvedElement = temp.firstChild;
+
+                evolvedElement.classList.add(color, 'fate-storm-glow', 'evolved');
+                square.replaceChild(evolvedElement, piece);
+
+                evolvedElement.addEventListener('animationend', () => {
+                    evolvedElement.classList.remove('fate-storm-glow');
+                }, { once: true });
+            });
+
+            console.log(`⚡ ${color.toUpperCase()}: ${chosen.length} piece(s) evolved by Fate Storm.`);
+        }
+    });
+}
+
+// other stuff
 function restoreInteraction() {
     document.querySelectorAll('.fantasy-piece').forEach(p => {
         p.style.pointerEvents = '';
@@ -3819,7 +4434,6 @@ function checkDivineProtection() {
         } else {
             piece.classList.remove('divine-shield');
         }
-
     });
 }
 

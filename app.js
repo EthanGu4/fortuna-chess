@@ -1731,7 +1731,24 @@ const abilityMap = {
                     sq.removeEventListener('click', handleTargetClick);
                 });
 
-                if (target && !target.classList.contains(playerTurn) && !target.classList.contains('evolved')) {
+                const backfire = Math.random() < 0.4; 
+
+
+                if (backfire) {
+                    const originSquare = piece.parentElement;
+                    originSquare.classList.add('gryphon-hit');
+
+                    setTimeout(() => {
+                        originSquare.classList.remove('gryphon-hit');
+                    }, 500);
+
+                    console.log(`🦅 ${abilityMap.gryphon.name} misfired and struck itself!`);
+
+                    if (handleAbilityCapture(originSquare, piece)) {
+                        originSquare.removeChild(piece);
+                    }
+
+                } else if (target && !target.classList.contains(playerTurn) && !target.classList.contains('evolved')) {
 
                     square.classList.add('gryphon-hit');
 
@@ -1742,18 +1759,19 @@ const abilityMap = {
                     setTimeout(() => {
                         square.classList.remove('gryphon-hit');
                     }, 500);
-
+                    
                     console.log(`🦅 Gryphon obliterated an enemy piece using ${abilityMap.gryphon.name}!`);
-
-                    abilityMap.gryphon.charges -= 1;
-                    console.log(`Charges remaining: ${abilityMap.gryphon.charges}`);
-
-                    updateSquares();
-                    finished();
-
+                
                 } else {
                     console.log(`🦅 ${abilityMap.gryphon.name} landed, but no enemy was hit.`);
+                    return;
                 }
+
+                abilityMap.gryphon.charges -= 1;
+                console.log(`Charges remaining: ${abilityMap.gryphon.charges}`);
+
+                updateSquares();
+                finished();
             }
 
             squares.forEach(square => {

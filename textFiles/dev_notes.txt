@@ -18,8 +18,6 @@ WARNING:
 - watch out for overflow: hidden it can cover a lot of the css and make some of the effects hidden behind the squares
 FOUDN THE ISSUE ITS LITERALLY CUZ I APPLIED TO THE PIECE RATHER THAN THE SQUAREA HAHAHAFHOAEFHOIA
 
-bruh wtf is going on...
-
 tracking of css elements:
 
 #classic-gameboard refers to the classic board using classical chess pieces (8x8)

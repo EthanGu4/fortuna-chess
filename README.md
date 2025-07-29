@@ -1,5 +1,5 @@
 
-## OVERVIEW 
+## Overview
 
 Fortuna Chess is a web-based chess experience that reimagines the classic game with a twist.
 
@@ -12,7 +12,7 @@ Unleash chaos and creativity in Fortuna Mode, where each side fields a set of sp
 Every unit can have unique abilities with cooldowns, charges, and effects, transforming the battlefield into a dynamic strategy game.
 
 
-## GETTING STARTED
+## Getting Started
 
 🕹️ How to Run the Game
 The game is completely web-based — no downloads or setup required beyond your browser.
@@ -54,7 +54,7 @@ A straightforward, rules-accurate game of chess — no new pieces, no surprises.
 
 Fortuna Mode is a chaotic twist on traditional chess where pieces are imbued with **special abilities**. Each side controls a set of **unique units** capable of powerful, unpredictable actions — teleportation, resurrection, explosions, and more.
 
-## SET-UP
+## Set up
 
 The board has a default set-up which may be modiifed in the app.js file. The user does not need to do anything to set-up the game after loading it locally.
 
@@ -74,18 +74,18 @@ The board may experience changes as a result of piece abilities or turn-based en
 
 There are different tiles that have specific traits that can be used in a strategic manner.
 
-## TURN & GAME FLOW
+## Turn & Game Flow
 
 Players still take alternating turns, still starting with white's move first.
 Instead of moving a piece, a player may decide to use an ability instead
 You cannot use an ability and move a piece in the same turn
 Both abilities and movement are very important, so be strategic and don't waste turns!
 
-## END GOAL
+## End Goal
 
 Unlike basic chess, there is no king! Just have fun and try to eliminate all enemy pieces in the most stylish and satisfying fashion possible. Treat this mode as somewhat of a sandbox, the possibilities are endless!
 
-## STRATEGY TIPS
+## Strategy
 
 Positioning -> Decide when to group versus separate your pieces, as some abilities work well together in vicinity
 
@@ -95,7 +95,7 @@ Board changes -> Board changes completely shake up the game, so anticipate them 
 
 Make sacrifices -> You can't win every interaction. Sometimes losing a piece to prevent further loss is the right move.
 
-## The Future
+## Future Additions
 
 - AI opponent in classic mode
 - Online multiplayer

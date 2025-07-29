@@ -1,8 +1,3 @@
-!! README !!
-
-
-LLMs used for some of the styling and graphics.
-All graphics found online at fontawesome.com or svgrepo.com, edited with svgomg optimize tool
 
 ## OVERVIEW 
 

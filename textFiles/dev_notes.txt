@@ -32,6 +32,7 @@ NOTE : 6/24 commit -> finished every single piece and their abilities as well as
 - also giving movement to all pieces
 - turn-based events, spawning magic squares, maybe "loot boxes" to incentivize player movement
 - user interface and overlay with rules and individual piece information, based on selection
+- for ability information as well as piece-specific things just add to the pieces.js and add directly through the selected-piece-info-modal
 - work on conjuring logic and ultimate piece fusion logic
 
 - FUTURE FUTURE -> different game boards and themes, having different pieces and set-ups depending on player choice

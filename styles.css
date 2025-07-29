@@ -1,4 +1,29 @@
-#gameboard {
+#container
+{
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px;
+}
+
+#top-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+#bottom-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+#game-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+#classic-gameboard {
   width: 640px;
   height: 640px;
   display: flex;
@@ -10,19 +35,68 @@
   user-select: none;
 }
 
+#fantasy-gameboard {
+  position: relative;
+  overflow: visible;
+  width: 640px;
+  height: 640px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px;
+  border-radius: 12px;
+  user-select: none;
+  background: radial-gradient(circle at center, #4e6374, #2a3a46 70%);
+  box-shadow: 0 0 40px 4px rgba(0, 191, 255, 0.3);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 40px 4px rgba(0, 191, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 60px 6px rgba(0, 191, 255, 0.5);
+  }
+}
+
 #player {
   font-weight: 700;
-  color: #ffd700; /* gold */
+  color: #ffd700;
 }
 
 #info-display {
-  margin-top: 10px;
+  margin-top: 0px;
   font-style: italic;
   min-height: 24px;
 }
 
+#selected-piece-info-modal {
+  display: none;
+  background-color: #111;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  font-family: sans-serif;
+  min-width: 180px;
+  position: relative;
+  top: 0;
+}
+
+body.fantasy-mode #selected-piece-info-modal {
+  display: block;
+}
+
+#selected-piece-info h2 {
+  margin-top: 0;
+  font-size: 1.2em;
+  border-bottom: 1px solid #444;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
 #restart-btn {
-  margin-top: 20px;
+  margin-top: 0px;
   background: #8b5a2b;
   color: #fff;
   font-weight: bold;
@@ -38,10 +112,13 @@
   background: #a36e40;
 }
 
+.hidden {
+  display: none !important;
+}
+
 body {
   margin: 0;
   height: 100vh;
-  background: linear-gradient(135deg, #6b8e23, #2e4d15); /* olive green gradient */
   background-repeat: no-repeat;
   background-attachment: fixed;
   display: flex;
@@ -51,10 +128,371 @@ body {
   color: #eee;
   user-select: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* subtle vignette overlay */
+body.classic-mode {
+    background: linear-gradient(135deg, #6b8e23, #2e4d15);
+}
+
+body.fantasy-mode {
+  /* layered background with nebula-ish gradients */
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 100, 180, 0.3), transparent 70%),
+    radial-gradient(circle at 70% 80%, rgba(100, 180, 255, 0.25), transparent 70%),
+    radial-gradient(circle at 50% 50%, rgba(180, 100, 255, 0.3), transparent 80%),
+    linear-gradient(135deg, #220022, #440044);
+  background-blend-mode: screen;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #eee;
+  position: relative;
+  overflow: visible;
+}
+
+body.fantasy-mode,
+body.fantasy-mode * {
+  cursor: url('data:image/svg+xml;charset=utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="48" width="48"><g transform="translate(64,0) scale(-1,1)"><text y="28" font-size="32">🪄</text></g></svg>'), auto !important;
+}
+
+body.fantasy-mode.cursor-reset,
+body.fantasy-mode.cursor-reset * {
+  cursor: auto !important;
+}
+
+.sparkle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 1;
+  z-index: 9999;
+
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+  box-shadow: 0 0 10px 2px currentColor;
+  
+  animation-name: sparkleFadeMove;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes sparkleFadeMove {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--move-x), var(--move-y)) scale(2.5);
+  }
+}
+
+#fantasy-gameboard .square.light {
+  background-color: #5e4193;
+  background-image:
+    radial-gradient(circle at 60% 40%, #a18cd1 12%, transparent 75%);
+  box-shadow:
+    inset 0 0 4px 1px rgba(160, 130, 210, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.dark {
+  background-color: #32285e;
+  background-image:
+    radial-gradient(circle at 40% 60%, #6f5db7 15%, transparent 75%);
+  box-shadow:
+    inset 0 0 5px 1.5px rgba(100, 80, 160, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+  overflow: visible;
+}
+
+/* POTENTIAL DIFFERENT THEME, MORE HEAVENLY FUTURE STYLE */
+/* #fantasy-gameboard .square.light {
+  background-color: #f7f0d8;
+  background-image:
+    radial-gradient(circle at 60% 40%, #fff8e1 20%, transparent 80%);
+  box-shadow:
+    inset 0 0 6px 2px rgba(255, 255, 200, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+#fantasy-gameboard .square.dark {
+  background-color: #d5e8f9;
+  background-image:
+    radial-gradient(circle at 40% 60%, #e9f2ff 25%, transparent 80%);
+  box-shadow:
+    inset 0 0 7px 2px rgba(180, 220, 255, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+} */
+
+#fantasy-gameboard .square.water {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(135deg, #005599 0%, #3399ff 60%, #66b2ff 100%);
+  box-shadow:
+    inset 0 0 20px 4px rgba(51, 153, 255, 0.7),
+    0 0 8px 2px rgba(102, 178, 255, 0.6);
+  border-radius: 8px;
+  overflow: visible;
+  border: 1.5px solid rgba(102, 178, 255, 0.7);
+}
+
+.fantasy-piece.drown-animation {
+  animation: drown 0.5s ease-out forwards;
+}
+
+@keyframes drown {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(20px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+#fantasy-gameboard .square.lava {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(135deg, #ff4500 0%, #ff7518 60%, #ffaa00 100%);
+  box-shadow:
+    inset 0 0 20px 5px rgba(255, 80, 0, 0.75),
+    0 0 14px 6px rgba(255, 140, 0, 0.8);
+  border-radius: 8px;
+  overflow: visible;
+  border: 1.5px solid rgba(255, 120, 0, 0.8);
+}
+
+.fantasy-piece.burn-animation {
+  animation: burn-flicker 0.6s ease-in-out forwards;
+  z-index: 10; 
+}
+
+@keyframes burn-flicker {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow:
+      0 0 12px 4px rgba(255, 80, 0, 0.7),
+      0 0 28px 10px rgba(255, 40, 0, 0.5),
+      inset 0 0 10px 3px rgba(255, 120, 0, 0.5);
+  }
+
+  25% {
+    transform: scale(1.06);
+    filter: brightness(1.4);
+    box-shadow:
+      0 0 20px 8px rgba(255, 140, 0, 0.9),
+      0 0 40px 16px rgba(255, 90, 0, 0.6),
+      inset 0 0 14px 5px rgba(255, 180, 50, 0.6);
+  }
+
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+    box-shadow:
+      0 0 16px 6px rgba(255, 100, 0, 0.8),
+      0 0 30px 12px rgba(255, 60, 0, 0.5),
+      inset 0 0 12px 4px rgba(255, 160, 30, 0.5);
+  }
+
+  75% {
+    transform: scale(1.08);
+    filter: brightness(1.5);
+    box-shadow:
+      0 0 26px 10px rgba(255, 180, 0, 1),
+      0 0 50px 20px rgba(255, 100, 0, 0.8),
+      inset 0 0 18px 6px rgba(255, 220, 80, 0.7);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow:
+      0 0 12px 4px rgba(255, 80, 0, 0.7),
+      0 0 28px 10px rgba(255, 40, 0, 0.5),
+      inset 0 0 10px 3px rgba(255, 120, 0, 0.5);
+  }
+}
+
+#fantasy-gameboard .square.magic {
+  position: relative;
+  z-index: 3;
+  background: linear-gradient(135deg, #d1b3ff 0%, #a473ff 60%, #8035e9 100%);
+  box-shadow:
+    inset 0 0 18px 6px rgba(180, 120, 255, 0.4),
+    0 0 14px 6px rgba(200, 160, 255, 0.7);
+  border-radius: 8px;
+  border: 2px solid rgba(230, 200, 255, 0.5);
+
+  /* ✨ Golden glowing outline */
+  outline: 2px solid gold;
+  outline-offset: -2px;
+  box-shadow:
+    inset 0 0 18px 6px rgba(180, 120, 255, 0.4),
+    0 0 14px 6px rgba(200, 160, 255, 0.7),
+    0 0 10px 3px rgba(255, 215, 0, 0.6); 
+
+  animation: arcanePulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes arcanePulse {
+  0% {
+    box-shadow:
+      inset 0 0 14px 4px rgba(180, 120, 255, 0.35),
+      0 0 8px 4px rgba(220, 180, 255, 0.5);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 22px 8px rgba(200, 140, 255, 0.5),
+      0 0 18px 10px rgba(255, 220, 255, 0.75);
+  }
+}
+
+@keyframes sparkleLight {
+  0%, 100% {
+    filter: brightness(1) saturate(1.2);
+  }
+  50% {
+    filter: brightness(1.4) saturate(1.5) hue-rotate(20deg);
+  }
+}
+
+@keyframes sparkleDark {
+  0%, 100% {
+    filter: brightness(0.9) saturate(1.2);
+  }
+  50% {
+    filter: brightness(1.3) saturate(1.6) hue-rotate(-20deg);
+  }
+}
+
+body.fantasy-mode #restart-btn,
+body.fantasy-mode #player-display,
+body.fantasy-mode #info-display {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #f5dfff;
+  border: 2px solid #cc99ff;
+  padding: 0.5em 1em;
+  margin-top: 0;
+  border-radius: 8px;
+  box-shadow: 0 0 12px 2px rgba(204, 153, 255, 0.5);
+  font-family: 'Cinzel', serif;
+}
+
+body.fantasy-mode #restart-btn:hover {
+  background-color: rgba(204, 153, 255, 0.7); /* example lighter purple */
+  color: white;
+  cursor: pointer;
+  border-color: #ffffff;
+}
+
+body.fantasy-mode #player-display {
+  margin-top: 1em;
+}
+
+body.fantasy-mode #info-display {
+  min-height: 1em; /* or whatever matches your other items */
+  line-height: 1em;
+}
+
+/* Glowing border animation */
+@keyframes border-glow {
+  0%, 100% {
+    box-shadow: 0 0 30px 8px rgba(240, 230, 140, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 40px 12px rgba(255, 255, 180, 1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+body.fantasy-mode .stars {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+
+  width: 1px;
+  height: 1px;
+
+  box-shadow:
+    30px 50px 2px 1px rgba(255, 255, 255, 0.9),
+    150px 90px 3px 1.5px rgba(255, 255, 255, 0.8),
+    220px 200px 2px 1px rgba(255, 255, 255, 0.6),
+    350px 300px 2px 1px rgba(255, 255, 255, 0.9),
+    400px 400px 4px 2px rgba(255, 200, 255, 0.7),
+    450px 120px 3px 1.2px rgba(255, 150, 255, 0.6),
+    600px 250px 2px 1px rgba(255, 255, 255, 0.8),
+    700px 350px 3px 1.5px rgba(255, 255, 255, 0.7),
+    800px 150px 4px 1.5px rgba(255, 100, 200, 0.9);
+  animation: twinkle 8s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { filter: brightness(100%); }
+  50% { filter: brightness(40%); }
+}
+
+body.fantasy-mode .shooting-stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 3;
+}
+
+body.fantasy-mode .shooting-stars::before,
+body.fantasy-mode .shooting-stars::after {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(45deg, white, rgba(255, 255, 255, 0));
+  opacity: 0.8;
+  transform: rotate(45deg);
+  animation: shootStar 6s ease-in-out infinite;
+}
+
+body.fantasy-mode .shooting-stars::after {
+  animation-delay: 3s;
+  left: 30%;
+}
+
+@keyframes shootStar {
+  0% {
+    transform: translateX(0) translateY(0) rotate(45deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-600px) translateY(600px) rotate(45deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-600px) translateY(600px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -64,7 +502,7 @@ body::before {
   z-index: -1;
 }
 
-.square {
+#classic-gameboard .square {
   width: 80px;
   height: 80px;
   display: flex;
@@ -79,17 +517,32 @@ body::before {
   z-index: 1;
 }
 
-.square.light {
+#fantasy-gameboard .square {
+  width: 53.3333px;
+  height: 53.3333px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+#classic-gameboard .square.light {
   background: linear-gradient(135deg, #f0d9b5, #e6c89f);
   box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
 }
 
-.square.dark {
+#classic-gameboard .square.dark {
   background: linear-gradient(135deg, #b58863, #8b5a2b);
   box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
 }
 
-.square svg {
+#classic-gameboard .square svg {
     height: 60px;
     width: 60px;
     margin: 10px;
@@ -97,23 +550,246 @@ body::before {
     z-index: -9;
 }
 
+#fantasy-gameboard .square svg {
+    height: 37.5px;
+    width: 37.5px;
+    margin: 7.9166px;
+    position: relative;
+    z-index: -9;
+}
+
+#classic-gameboard .square.last-move-from {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 2;
+}
+
+#classic-gameboard .square.last-move-to {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 2;
+}
+
+#fantasy-gameboard .square.last-move-from {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 3;
+}
+
+#fantasy-gameboard .square.last-move-to {
+  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1);
+  z-index: 3;
+}
+
 path {
     position: relative;
     z-index: -10;
 }
 
-.piece {
+#classic-gameboard .piece {
   position: relative;
   z-index: 9;
 }
 
-.piece:hover {
+#classic-gameboard .piece:hover {
   filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.8)); /* subtle gold glow */
   cursor: grab;
 }
 
-.piece:active {
+#classic-gameboard .piece:active {
   cursor: grabbing;
+}
+
+#fantasy-gameboard .fantasy-piece {
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .fantasy-piece.select-glow {
+    filter: 
+      drop-shadow(0 0 6px rgba(255, 0, 0, 1))
+      drop-shadow(0 0 12px rgba(200, 0, 0, 0.9))
+      drop-shadow(0 0 18px rgba(180, 0, 0, 0.8));
+    transition: filter 0.2s ease;
+    z-index: 10;
+    animation: intenseRedGlow 1.5s infinite ease-in-out;
+}
+
+@keyframes intenseRedGlow {
+  0%, 100% {
+    filter: 
+      drop-shadow(0 0 6px rgba(255, 0, 0, 1))
+      drop-shadow(0 0 12px rgba(200, 0, 0, 0.9))
+      drop-shadow(0 0 18px rgba(180, 0, 0, 0.8));
+  }
+  50% {
+    filter: 
+      drop-shadow(0 0 8px rgba(255, 50, 50, 1))
+      drop-shadow(0 0 16px rgba(220, 20, 20, 0.9))
+      drop-shadow(0 0 24px rgba(200, 0, 0, 0.85));
+  }
+}
+
+#fantasy-gameboard .square.evolved {
+  position: relative;
+  z-index: 2;
+  box-shadow: 
+    0 0 14px 5px rgba(255, 255, 130, 0.8),
+    0 0 35px 12px rgba(255, 255, 180, 0.5),
+    inset 0 0 10px 4px rgba(255, 255, 210, 0.4);
+  transition: box-shadow 0.25s ease-in-out;
+  animation: glow-pulse 1.8s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow:
+      0 0 8px 3px rgba(255, 255, 140, 0.5),
+      0 0 20px 8px rgba(255, 255, 180, 0.3),
+      inset 0 0 6px 3px rgba(255, 255, 210, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 14px 6px rgba(255, 255, 180, 0.65),
+      0 0 28px 12px rgba(255, 255, 220, 0.4),
+      inset 0 0 10px 5px rgba(255, 255, 240, 0.3);
+    transform: scale(1.035);
+  }
+  100% {
+    box-shadow:
+      0 0 8px 3px rgba(255, 255, 140, 0.5),
+      0 0 20px 8px rgba(255, 255, 180, 0.3),
+      inset 0 0 6px 3px rgba(255, 255, 210, 0.2);
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.evolving-effect {
+  animation: evolve-glow 0.5s ease-out;
+  box-shadow: 0 0 12px 6px rgba(0, 200, 255, 0.7), inset 0 0 6px rgba(0, 255, 255, 0.4);
+}
+
+@keyframes evolve-glow {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0px rgba(0, 200, 255, 0);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px 8px rgba(0, 200, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(0, 200, 255, 0);
+  }
+}
+
+#fantasy-gameboard .square.lightUltimate {
+  position: relative;
+  z-index: 3;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 20px 8px rgba(255, 255, 230, 0.6),
+    0 0 40px 16px rgba(255, 255, 255, 0.4),
+    0 0 60px 30px rgba(255, 255, 255, 0.25),
+    inset 0 0 15px 6px rgba(255, 255, 255, 0.3),
+    inset 0 0 20px 10px rgba(255, 255, 255, 0.4);
+  animation: divine-explosion 1.6s infinite ease-in-out alternate,
+             pulse-ultimate 2s infinite ease-in-out;
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.shadowUltimate {
+  position: relative;
+  z-index: 3;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 75%);
+  border-radius: 8px;
+  border: 2px solid rgba(30, 0, 50, 0.9);
+  box-shadow:
+    0 0 20px 8px rgba(50, 0, 90, 0.6),
+    0 0 40px 20px rgba(30, 0, 60, 0.5),
+    0 0 80px 35px rgba(10, 0, 30, 0.4),
+    inset 0 0 25px 12px rgba(40, 0, 70, 0.85),
+    inset 0 0 50px 25px rgba(0, 0, 0, 1);
+  animation: shadow-explosion 1.9s infinite ease-in-out alternate,
+             pulse-ultimate 2.4s infinite ease-in-out;
+  overflow: visible;
+}
+
+@keyframes divine-explosion {
+  0% {
+    box-shadow:
+      0 0 20px 6px rgba(255, 255, 180, 0.6),
+      0 0 45px 18px rgba(255, 255, 220, 0.5),
+      0 0 70px 30px rgba(255, 255, 255, 0.5),
+      inset 0 0 15px 6px rgba(255, 255, 200, 0.65),
+      inset 0 0 30px 15px rgba(255, 255, 255, 0.95);
+  }
+  100% {
+    box-shadow:
+      0 0 35px 12px rgba(255, 255, 230, 0.6),
+      0 0 70px 30px rgba(255, 255, 255, 0.5),
+      0 0 120px 60px rgba(255, 255, 255, 0.5),
+      inset 0 0 30px 15px rgba(255, 255, 255, 0.75),
+      inset 0 0 50px 25px rgba(255, 255, 255, 0.95);
+  }
+}
+
+@keyframes shadow-explosion {
+  0% {
+    box-shadow:
+      0 0 15px 6px rgba(80, 0, 130, 0.6),
+      0 0 40px 18px rgba(50, 0, 90, 0.5),
+      0 0 70px 30px rgba(30, 0, 60, 0.4),
+      inset 0 0 10px 4px rgba(60, 0, 80, 0.6),
+      inset 0 0 25px 10px rgba(0, 0, 0, 0.8);
+  }
+  100% {
+    box-shadow:
+      0 0 25px 10px rgba(100, 0, 150, 0.7),
+      0 0 60px 25px rgba(60, 0, 100, 0.6),
+      0 0 100px 40px rgba(40, 0, 70, 0.5),
+      inset 0 0 20px 10px rgba(80, 0, 110, 0.8),
+      inset 0 0 35px 18px rgba(0, 0, 0, 1);
+  }
+}
+
+@keyframes pulse-ultimate {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+#fantasy-gameboard .fantasy-piece:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1)) drop-shadow(0 0 12px rgba(255, 223, 0, 0.9));
+  cursor: grab;
+}
+
+#fantasy-gameboard .fantasy-piece:active {
+  cursor: grabbing;
+}
+
+/* CAPTURING ANIMATION */
+.captured {
+  animation: implode 0.5s ease-in forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes implode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
 }
 
 /* .beige {
@@ -124,55 +800,70 @@ path {
     background-color: rgb(169, 43, 43);
 } */
 
-.black {
+#classic-gameboard .black {
     fill: black;
 }
 
-.white {
+#classic-gameboard .white {
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
     opacity: 0.95;
     fill: #eee8d5;
 }
 
-.square.last-move-from {
-  box-shadow: 0 0 12px 6px rgba(255, 140, 0, 0.9); /* deeper orange */
-  z-index: 2;
+#fantasy-gameboard .black {
+  fill: #000000; /* jet black */
+  filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.3)); /* subtle black glow */
+  position: relative;
+  z-index: 3;
 }
 
-.square.last-move-to {
-  box-shadow: 0 0 15px 7px rgba(255, 215, 0, 1); /* bright gold */
-  z-index: 2;
+#fantasy-gameboard .white {
+  fill: #f8f4e3; /* creamy white */
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 240, 0.3)); /* subtle white glow */
+  position: relative;
+  z-index: 3;
+}
+
+/* adds subtle black border for visibility */
+.outline-white svg path,
+.outline-white svg circle,
+.outline-white svg rect,
+.outline-white svg polygon,
+.outline-white svg ellipse {
+  stroke: black;
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
 }
 
 @keyframes flash-shake-glow {
   0% {
-    background-color: rgba(255, 0, 0, 0.4);
-    box-shadow: 0 0 6px 2px rgba(255, 0, 0, 0.6);
+    background-color: rgba(255, 0, 0, 0.6);
+    box-shadow: 0 0 12px 4px rgba(255, 0, 0, 0.9);
     transform: translateX(0);
   }
   15% {
-    transform: translateX(-4px);
-    box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.8);
+    transform: translateX(-5px);
+    box-shadow: 0 0 18px 6px rgba(255, 0, 0, 1);
   }
   30% {
-    transform: translateX(4px);
-    box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.8);
+    transform: translateX(5px);
+    box-shadow: 0 0 18px 6px rgba(255, 0, 0, 1);
   }
   45% {
-    transform: translateX(-3px);
-    box-shadow: 0 0 8px 2.5px rgba(255, 0, 0, 0.7);
+    transform: translateX(-4px);
+    box-shadow: 0 0 14px 5px rgba(255, 0, 0, 0.95);
   }
   60% {
-    transform: translateX(3px);
-    box-shadow: 0 0 8px 2.5px rgba(255, 0, 0, 0.7);
+    transform: translateX(4px);
+    box-shadow: 0 0 14px 5px rgba(255, 0, 0, 0.95);
   }
   75% {
-    transform: translateX(-2px);
-    box-shadow: 0 0 6px 2px rgba(255, 0, 0, 0.6);
+    transform: translateX(-3px);
+    box-shadow: 0 0 12px 4px rgba(255, 0, 0, 0.85);
   }
   90% {
-    transform: translateX(2px);
-    box-shadow: 0 0 6px 2px rgba(255, 0, 0, 0.6);
+    transform: translateX(3px);
+    box-shadow: 0 0 12px 4px rgba(255, 0, 0, 0.85);
   }
   100% {
     box-shadow: none;
@@ -180,6 +871,1755 @@ path {
   }
 }
 
-.square.invalid-move {
+#classic-gameboard .square.invalid-move {
   animation: flash-shake-glow 0.4s ease;
+  z-index: 2;
 }
+
+#fantasy-gameboard .square.invalid-move {
+  animation: flash-shake-glow 0.4s ease;
+  z-index: 3;
+}
+
+#mode-selection {
+
+  height: 100vh; /* full viewport height */
+  width: 100vw; /* full viewport width */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  background: linear-gradient(135deg,
+    #4b0082 0%,      /* dark indigo */
+    #6a0dad 40%,     /* vibrant purple */
+    #9b30ff 70%,     /* bright violet */
+    #4b0082 100%);   /* dark indigo */
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Heading */
+#mode-selection h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Buttons container */
+#mode-selection .mode-btn {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 2px solid white;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 15px 40px;
+  margin: 12px 0;
+  cursor: pointer;
+  width: 240px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+#mode-selection .mode-btn:hover {
+  background-color: white;
+  color: #764ba2;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+#mode-selection .mode-btn:active,
+#mode-selection .mode-btn:focus {
+  outline: none;
+  background-color: #5a3e9e;
+  color: white;
+  box-shadow: 0 0 12px 3px #5a3e9e;
+  transform: scale(0.98);
+}
+
+/* PASSIVE RELATED CSS */
+
+/* EVASION */
+#fantasy-gameboard .square.evasion-glow {
+  animation: teleportRipple 0.95s ease-out;
+  border-radius: 8px;
+  z-index: 2;
+  position: relative;
+}
+
+@keyframes teleportRipple {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(100, 200, 255, 0.7),
+      0 0 0 0 rgba(150, 250, 255, 0.4);
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    box-shadow:
+      0 0 40px 20px rgba(100, 200, 255, 0.5),
+      0 0 60px 30px rgba(150, 250, 255, 0.3);
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    box-shadow:
+      0 0 80px 40px rgba(100, 200, 255, 0),
+      0 0 100px 50px rgba(150, 250, 255, 0);
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* ALL ABILITY RELATED CSS */
+
+/* FOR BOMB */
+#fantasy-gameboard .explosion-zone {
+  animation: explodeFlash 0.5s ease-in-out;
+  z-index: 5;
+  position: relative;
+}
+
+@keyframes explodeFlash {
+  0% {
+    transform: scale(1.1);
+    background: radial-gradient(circle, #fff100, #ff5722, #b71c1c);
+    box-shadow: 0 0 20px 10px rgba(255, 100, 0, 0.7);
+  }
+  50% {
+    transform: scale(1.25);
+    background: radial-gradient(circle, #ff6347, #ff0000, #000);
+  }
+  100% {
+    transform: scale(1);
+    background: radial-gradient(circle, #ff7f50, #8b0000, black);
+  }
+}
+
+@keyframes cannon-pulse-glow {
+  0% {
+    filter: drop-shadow(0 0 5px orange);
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px red);
+    transform: translate(-50%, -50%) scale(2.6);
+  }
+  100% {
+    filter: drop-shadow(0 0 5px orange);
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+}
+
+#fantasy-gameboard .explosion-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  border: 3px solid rgba(255, 100, 0, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: ring-expand 0.6s ease-out forwards;
+  z-index: 998;
+  pointer-events: none;
+}
+
+@keyframes ring-expand {
+  to {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* FOR DRAGON */
+#fantasy-gameboard .fire-column {
+  position: relative;
+  background: linear-gradient(
+    45deg,
+    #ff4500,
+    #ff8c00,
+    #ffd700,
+    #ff4500,
+    #ff8c00
+  );
+  background-size: 400% 400%;
+  animation: fireGradient 3s ease infinite, fireFlicker 0.15s infinite alternate;
+  box-shadow:
+    0 0 20px 8px #ff6a00,
+    0 0 40px 15px #ff4500,
+    inset 0 0 30px 10px #ff8c00;
+  border-radius: 6px;
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+/* Smooth moving gradient */
+@keyframes fireGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Quick flicker effect */
+@keyframes fireFlicker {
+  0% {
+    filter: brightness(1);
+    box-shadow:
+      0 0 20px 8px #ff6a00,
+      0 0 40px 15px #ff4500,
+      inset 0 0 30px 10px #ff8c00;
+  }
+  50% {
+    filter: brightness(1.3);
+    box-shadow:
+      0 0 30px 12px #ff8500,
+      0 0 50px 18px #ff5000,
+      inset 0 0 40px 15px #ffaa00;
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow:
+      0 0 20px 8px #ff6a00,
+      0 0 40px 15px #ff4500,
+      inset 0 0 30px 10px #ff8c00;
+  }
+}
+
+/* FOR PHOENIX */
+#fantasy-gameboard .square.lava-burst {
+  animation: lava-burst 0.9s ease-in-out, lava-shake 0.3s ease-in-out 0.1s;
+  z-index: 3;
+}
+
+@keyframes lava-burst {
+  0% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 12px 4px rgba(255, 100, 0, 0.6),
+      0 0 20px 8px rgba(255, 60, 0, 0.4);
+    background-color: rgba(255, 80, 0, 0.15);
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 16px 6px rgba(255, 120, 0, 0.7),
+      0 0 28px 12px rgba(255, 80, 0, 0.5);
+    background-color: rgba(255, 100, 0, 0.25);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px 3px rgba(255, 80, 0, 0.5),
+      0 0 16px 6px rgba(255, 50, 0, 0.3);
+    background-color: rgba(255, 70, 0, 0.1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes lava-shake {
+  0% { transform: translate(0px, 0px); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 2px); }
+  75% { transform: translate(2px, 1px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+.fantasy-piece.phoenix-rebirth {
+  animation: phoenixRebirth 0.6s ease-in-out;
+  z-index: 3;
+  filter: brightness(1.8) drop-shadow(0 0 8px rgba(255, 120, 0, 0.8));
+  opacity: 0;
+  transform-origin: center;
+}
+
+@keyframes phoenixRebirth {
+  0% {
+    transform: scale(0.5) translateY(20px) rotate(-10deg);
+    opacity: 0;
+    filter: brightness(1) blur(2px);
+  }
+
+  30% {
+    transform: scale(1.1) translateY(-10px) rotate(5deg);
+    opacity: 0.6;
+    filter: brightness(2) drop-shadow(0 0 12px rgba(255, 100, 0, 0.7));
+  }
+
+  60% {
+    transform: scale(1.2) translateY(-20px) rotate(-3deg);
+    opacity: 1;
+    filter: brightness(2.5) drop-shadow(0 0 20px rgba(255, 160, 0, 1));
+  }
+
+  85% {
+    transform: scale(1.05) translateY(-10px) rotate(2deg);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 10px rgba(255, 120, 0, 0.8));
+  }
+
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1.3) drop-shadow(0 0 6px rgba(255, 80, 0, 0.6));
+  }
+}
+
+/* FOR FISH */
+#fantasy-gameboard .fish-teleport {
+  animation: splash 0.6s ease-out;
+  background: radial-gradient(circle at center, #00e5ff 40%, #006064 100%) !important;
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes splash {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0px 0px rgba(0, 229, 255, 0.8);
+  }
+  30% {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px 15px rgba(0, 229, 255, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px 0px rgba(0, 229, 255, 0);
+  }
+}
+
+/* FOR FROG */
+#fantasy-gameboard .square.swapping-frog {
+  position: relative;
+  z-index: 2;
+  border-radius: 12px;
+  animation: pulse-glow 1.2s infinite ease-in-out;
+  filter: drop-shadow(0 0 6px limegreen) drop-shadow(0 0 12px limegreen);
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 4px 2px limegreen;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 8px limegreen;
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 4px 2px limegreen;
+    transform: scale(1);
+  }
+}
+
+/* FOR CROCODILE */
+#fantasy-gameboard .square.swamp-portal {
+  background: radial-gradient(circle at center, #335533 30%, #222 70%, transparent 100%);
+  animation: swampRipple 1.2s infinite ease-in-out;
+  border: 2px dashed #88cc88;
+  z-index: 3;
+}
+
+@keyframes swampRipple {
+  0% {
+    box-shadow: 0 0 10px 3px rgba(50, 150, 100, 0.3);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(50, 200, 150, 0.6);
+    filter: brightness(1.2);
+  }
+  100% {
+    box-shadow: 0 0 10px 3px rgba(50, 150, 100, 0.3);
+    filter: brightness(1);
+  }
+}
+
+#fantasy-gameboard .square.swamp-teleport {
+  position: relative;
+  z-index: 3;
+  animation: portalPulse 1.6s ease-out forwards;
+  transform-origin: center center;
+}
+
+@keyframes portalPulse {
+  0% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 0 0px 0px rgba(180, 0, 255, 0),
+      inset 0 0 0px 0px rgba(255, 100, 200, 0);
+    background-color: rgba(120, 0, 120, 0.1);
+  }
+  30% {
+    transform: scale(1.05) rotate(120deg);
+    box-shadow: 
+      0 0 20px 8px rgba(200, 0, 255, 0.5),
+      inset 0 0 10px 4px rgba(255, 100, 200, 0.4);
+    background-color: rgba(150, 50, 200, 0.2);
+  }
+  60% {
+    transform: scale(1.1) rotate(240deg);
+    box-shadow: 
+      0 0 36px 16px rgba(220, 80, 255, 0.7),
+      inset 0 0 20px 10px rgba(255, 150, 220, 0.5);
+    background-color: rgba(200, 100, 255, 0.3);
+  }
+  100% {
+    transform: scale(1.05) rotate(360deg);
+    box-shadow: 
+      0 0 18px 10px rgba(180, 0, 200, 0.3),
+      inset 0 0 10px 6px rgba(255, 80, 200, 0.2);
+    background-color: rgba(140, 40, 180, 0.15);
+  }
+}
+
+/* FOR GRYPHON */
+#fantasy-gameboard .square.gryphon-targetable {
+    position: relative;
+    outline: 2px solid gold;
+    box-shadow: 0 0 10px 4px rgba(255, 215, 0, 0.7), inset 0 0 6px 2px rgba(255, 223, 0, 0.9);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: crosshair;
+    z-index: 3;
+}
+
+#fantasy-gameboard .square.gryphon-hit {
+  box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.9);
+  animation: gryphon-pulse 0.7s ease-out;
+  z-index: 4;
+  position: relative;
+  transition: transform 0.2s ease-out;
+}
+
+@keyframes gryphon-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 230, 0, 1);
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 18px 12px rgba(255, 0, 0, 0.7);
+    transform: scale(1.1);
+  }
+  60% {
+    box-shadow: 0 0 28px 20px rgba(255, 60, 0, 0.9);
+    transform: scale(1.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.gryphon-hit::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  background: url('graphics/talon_claw.png') center/contain no-repeat;
+  transform: translate(-50%, -50%) scale(1);
+  animation: claw-impact 0.4s ease-out;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 1;
+}
+
+@keyframes claw-impact {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+    opacity: 1;
+    filter: brightness(2) saturate(1.5);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6) rotate(-10deg);
+    opacity: 0;
+  }
+}
+
+/* FOR HAMSA */
+#fantasy-gameboard .square.hamsa-spin {
+  animation: shuffleSpin 0.6s ease-in-out;
+  transform-origin: center center;
+  z-index: 10;
+}
+
+@keyframes shuffleSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* FOR JEDI */
+#fantasy-gameboard .square.force-push {
+  position: relative;
+  z-index: 2;
+  animation: forcePushShock 0.5s ease-out;
+  overflow: visible;
+}
+
+.fantasy-piece.force-push {
+  animation: forcePushPulse 0.5s ease-out;
+}
+
+@keyframes forcePushShock {
+  0% {
+    box-shadow: 
+      0 0 20px 6px rgba(100, 255, 255, 0.9),
+      inset 0 0 14px rgba(0, 255, 255, 0.8);
+    background-color: rgba(0, 255, 255, 0.1);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: none;
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes forcePushPulse {
+  0% {
+    transform: translateY(-3px) scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8));
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+/* FOR SITH */
+#fantasy-gameboard .square.dark-conversion {
+  position: relative;
+  z-index: 2;
+  animation: darkConversionShock 0.8s ease-in-out;
+  box-shadow:
+    0 0 14px 4px rgba(120, 0, 120, 0.6),
+    inset 0 0 20px 6px rgba(50, 0, 100, 0.5),
+    0 0 50px 20px rgba(160, 0, 180, 0.3);
+  background: radial-gradient(circle, rgba(80, 0, 120, 0.1) 0%, transparent 70%);
+  border: 2px solid rgba(200, 0, 200, 0.4);
+}
+
+@keyframes darkConversionShock {
+  0% {
+    transform: scale(1);
+    filter: brightness(0.9) saturate(0.8);
+    box-shadow: 
+      0 0 6px 2px rgba(255, 0, 0, 0.4),
+      inset 0 0 10px 3px rgba(100, 0, 100, 0.3);
+  }
+  30% {
+    transform: scale(1.1) rotate(0.5deg);
+    filter: brightness(1.1) saturate(1.3);
+    box-shadow: 
+      0 0 20px 10px rgba(180, 0, 180, 0.6),
+      inset 0 0 25px 10px rgba(150, 0, 200, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+    box-shadow:
+      0 0 14px 4px rgba(120, 0, 120, 0.6),
+      inset 0 0 20px 6px rgba(50, 0, 100, 0.5);
+  }
+}
+
+/* FOR JESTER */
+#fantasy-gameboard .square.jester-swap {
+  animation: jester-flash 1.2s ease-in-out;
+  z-index: 3;
+}
+
+@keyframes jester-flash {
+  0%, 100% {
+    box-shadow: 0 0 10px 3px #ff00ffaa;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px 6px #ff00ffaa;
+    transform: scale(1.05);
+  }
+}
+
+/* FOR JOKER */
+#fantasy-gameboard .square.joker-swap {
+  animation: joker-glitch 0.9s ease-in-out;
+  z-index: 5;
+  position: relative;
+}
+
+@keyframes joker-glitch {
+  0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg) brightness(1); opacity: 1; }
+  20% { transform: rotate(15deg) scale(0.9); filter: hue-rotate(60deg) brightness(1.2); opacity: 0.8; }
+  40% { transform: rotate(-10deg) scale(1.2); filter: hue-rotate(120deg) brightness(1.5); opacity: 0.6; }
+  60% { transform: rotate(25deg) scale(0.95); filter: hue-rotate(180deg) brightness(1); opacity: 0.85; }
+  80% { transform: rotate(-15deg) scale(1.1); filter: hue-rotate(300deg) brightness(0.8); opacity: 1; }
+  100% { transform: rotate(0deg) scale(1); filter: hue-rotate(360deg) brightness(1); opacity: 1; }
+}
+
+#fantasy-gameboard .square.joker-swap::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  box-shadow:
+    0 0 12px 4px rgba(128, 0, 128, 0.7),
+    0 0 20px 6px rgba(0, 255, 0, 0.4);
+  border-radius: 8px;
+  animation: joker-fade-glow 0.9s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes joker-fade-glow {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* FOR KHANDA */
+.fantasy-piece.khanda-strike {
+  animation: khandaFlash 0.9s ease-out;
+  filter: drop-shadow(0 0 8px crimson);
+}
+
+@keyframes khandaFlash {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+
+#fantasy-gameboard .square.khanda-glow {
+  position: relative;
+  z-index: 2;
+  animation: balanceFlash 1.2s ease-in-out;
+  box-shadow:
+    0 0 12px 6px rgba(255, 240, 160, 0.7),
+    0 0 24px 12px rgba(255, 210, 100, 0.5),
+    inset 0 0 14px 6px rgba(255, 220, 120, 0.5);
+  border-radius: 8px;
+}
+
+@keyframes balanceFlash {
+  0% {
+    box-shadow: none;
+    opacity: 1;
+  }
+  30% {
+    box-shadow:
+      0 0 18px 8px rgba(255, 240, 160, 0.9),
+      0 0 28px 14px rgba(255, 220, 120, 0.7),
+      inset 0 0 18px 8px rgba(255, 230, 150, 0.6);
+  }
+  100% {
+    box-shadow: none;
+    opacity: 1;
+  }
+}
+
+/* FOR ZULFIQAR */
+#fantasy-gameboard .square.zulfiqar-split {
+  animation: zulfiqarSplitGlow 1.2s ease-in-out forwards, zulfiqarCrackle 1.2s infinite alternate;
+  box-shadow:
+    0 0 18px 6px rgba(255, 255, 210, 0.95),
+    0 0 40px 18px rgba(255, 255, 180, 0.8),
+    inset 0 0 18px 6px rgba(255, 255, 230, 0.7);
+  background: radial-gradient(circle, rgba(255,255,230,0.4) 25%, rgba(255,255,255,0.05) 75%);
+  position: relative;
+  border-radius: 8px;
+  z-index: 3;
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::after,
+#fantasy-gameboard .square.zulfiqar-split::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0) 47%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 53%
+  );
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::after {
+  transform: scale(0.9) rotate(0deg);
+  animation: zulfiqarArc1 0.6s ease-out;
+}
+
+#fantasy-gameboard .square.zulfiqar-split::before {
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 47%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 53%
+  );
+  transform: scale(0.9) rotate(0deg);
+  animation: zulfiqarArc2 0.6s ease-out 0.15s;
+}
+
+@keyframes zulfiqarArc1 {
+  0%   { opacity: 0; transform: scale(0.8) rotate(0deg); }
+  30%  { opacity: 1; transform: scale(1.1) rotate(10deg); }
+  100% { opacity: 0; transform: scale(1.2) rotate(20deg); }
+}
+
+@keyframes zulfiqarArc2 {
+  0%   { opacity: 0; transform: scale(0.8) rotate(0deg); }
+  30%  { opacity: 1; transform: scale(1.1) rotate(-10deg); }
+  100% { opacity: 0; transform: scale(1.2) rotate(-20deg); }
+}
+
+@keyframes zulfiqarSplitGlow {
+  0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+  50% { transform: scale(1.08); opacity: 0.85; filter: brightness(1.3); }
+  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes zulfiqarCrackle {
+  0%   { filter: drop-shadow(0 0 4px rgba(255, 255, 180, 0.3)); }
+  100% { filter: drop-shadow(0 0 8px rgba(255, 255, 230, 0.6)) contrast(1.1); }
+}
+
+/* FOR OTTER */
+.fantasy-piece.otter-evasion {
+  animation: evasionEscape 0.6s ease-in-out;
+  z-index: 3;
+  filter: blur(1px) brightness(1.3);
+  opacity: 0.85;
+}
+
+@keyframes evasionEscape {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-4px, -2px) rotate(-2deg);
+  }
+  40% {
+    transform: translate(6px, 2px) rotate(3deg);
+  }
+  60% {
+    transform: translate(-8px, -3px) rotate(-4deg);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(10px, 4px) rotate(2deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.6;
+  }
+}
+
+#fantasy-gameboard .square.enhancing-otter {
+  position: relative;
+  z-index: 2;
+  border-radius: 12px;
+  animation: pulse-glow-blue 1.2s infinite ease-in-out;
+  filter: drop-shadow(0 0 6px #66ccff) drop-shadow(0 0 12px #66ccff);
+}
+
+@keyframes pulse-glow-blue {
+  0% {
+    box-shadow: 0 0 4px 2px #66ccff;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 8px #66ccff;
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 4px 2px #66ccff;
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.water-upgrade {
+  animation: waterUpgradeFlash 1s ease-out;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 6px rgba(100, 200, 255, 0.6)) drop-shadow(0 0 12px rgba(100, 200, 255, 0.8));
+}
+
+@keyframes waterUpgradeFlash {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(100, 200, 255, 0);
+    opacity: 0.8;
+  }
+  30% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px 6px rgba(100, 200, 255, 0.6);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px 10px rgba(100, 200, 255, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(100, 200, 255, 0);
+    opacity: 1;
+  }
+}
+
+/* FOR GUITAR */
+#fantasy-gameboard .square.encore-cast {
+  animation: encore-glow 0.8s ease-in-out;
+  z-index: 5;
+  border-radius: 6px;
+  position: relative;
+}
+
+#fantasy-gameboard .square.encore-cast::before {
+  content: "🎵";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  font-size: 1.4rem;
+  opacity: 0;
+  animation: note-float 0.9s ease-out forwards;
+  pointer-events: none;
+  z-index: 6;
+}
+
+@keyframes encore-glow {
+  0% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 8px rgba(255, 215, 0, 0.75);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(255, 215, 0, 0.0);
+    transform: scale(1);
+  }
+}
+
+@keyframes note-float {
+  0% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-20px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* FOR VIOLIN */
+#fantasy-gameboard .square.aria-cast {
+  animation: aria-flare 0.6s ease-in-out;
+  z-index: 3;
+}
+
+@keyframes aria-flare {
+  0% { box-shadow: 0 0 10px 5px rgba(255, 150, 255, 0.5); transform: scale(1); }
+  100% { box-shadow: 0 0 30px 15px rgba(255, 200, 255, 0.8); transform: scale(1.1); }
+}
+
+#fantasy-gameboard .square.musical-cone-hit {
+  position: relative;
+  border: 2px solid #FFC107; 
+  border-radius: 8px;
+  background: radial-gradient(circle at center, #FFF3E0, #FFECB3 80%);
+  animation: musicalPulse 0.8s ease-in-out forwards;
+  box-shadow:
+    0 0 8px 3px #FFD54F,
+    inset 0 0 10px 3px #FFF8E1;
+  overflow: visible;
+  z-index: 0;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::before,
+#fantasy-gameboard .square.musical-cone-hit::after {
+  content: "♪";
+  position: absolute;
+  font-size: 18px;
+  color: #FFB300;
+  opacity: 0.7;
+  animation: floatNotes 2.5s linear forwards;
+  pointer-events: none;
+  user-select: none;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::before {
+  left: 10%;
+  top: 30%;
+  animation-delay: 0s;
+}
+
+#fantasy-gameboard .square.musical-cone-hit::after {
+  right: 15%;
+  top: 50%;
+  font-size: 14px;
+  animation-delay: 0.3s;
+  color: #FFA000;
+}
+
+@keyframes musicalPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px 3px #FFD54F,
+      inset 0 0 10px 3px #FFF8E1;
+  }
+  50% {
+    box-shadow:
+      0 0 18px 6px #FFCA28,
+      inset 0 0 18px 6px #FFF3E0;
+  }
+}
+
+@keyframes floatNotes {
+  0% {
+    opacity: 0.7;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-10px) rotate(10deg);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+#fantasy-gameboard .fantasy-piece.musical-death {
+  animation: musicalDeath 1s ease-out forwards;
+  transform-origin: center;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 1;
+}
+
+@keyframes musicalDeath {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.2) rotate(5deg);
+    filter: brightness(2);
+  }
+  50% {
+    transform: scale(0.9) rotate(-3deg);
+    filter: brightness(1.2);
+  }
+  70% {
+    opacity: 0.6;
+    transform: scale(1.5) rotate(15deg);
+    filter: contrast(1.5) blur(1px);
+  }
+  100% {
+    transform: scale(0.5) rotate(-25deg) translateY(-20px);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+/* FOR PIRATE */
+#fantasy-gameboard .sweep-strike {
+  position: relative;
+  overflow: hidden;
+}
+
+#fantasy-gameboard .sweep-strike::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.8) 50%, transparent 60%);
+  transform: rotate(0deg) scale(0.5);
+  animation: sword-sweep 0.35s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes sword-sweep {
+  0% {
+    transform: rotate(0deg) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(90deg) scale(1);
+    opacity: 0;
+  }
+}
+
+/* FOR PIRATE KING */
+#fantasy-gameboard .barrage-target {
+  animation: explode 0.5s ease-out;
+  background: radial-gradient(circle, #ff3d00 0%, #ff9800 60%, transparent 100%) !important;
+  box-shadow: 0 0 25px 15px rgba(255, 61, 0, 0.7);
+  position: relative;
+  z-index: 20;
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.3);
+    opacity: 1;
+    filter: brightness(3);
+    box-shadow: 0 0 40px 20px rgba(255, 200, 0, 0.9);
+  }
+  60% {
+    transform: scale(0.9);
+    opacity: 0.8;
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: none;
+    filter: brightness(1);
+  }
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, 2px); }
+  50% { transform: translate(5px, -2px); }
+  75% { transform: translate(-3px, 3px); }
+}
+
+.cannonball {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #333 0%, #111 100%);
+  border-radius: 50%;
+  z-index: 999;
+  animation: cannonballDrop 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes cannonballDrop {
+  0% {
+    top: -50px;
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  80% {
+    top: 40%;
+    transform: translateX(-50%) scale(1.3);
+  }
+  100% {
+    top: 50%;
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+body.shake {
+  animation: screenShake 0.4s;
+}
+
+/* FOR PRIEST */
+.fantasy-piece.divine-shield {
+  position: relative;
+  z-index: 3;
+  box-shadow: inset 0 0 8px rgba(255, 255, 150, 0.6),
+              inset 0 0 4px rgba(255, 255, 200, 0.4);
+}
+
+.fantasy-piece.divine-shield::after {
+  content: '🛡️';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.2rem;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#fantasy-gameboard .square.shield-block {
+  animation: shieldFlash 0.6s ease-out;
+  z-index: 5;
+  position: relative;
+}
+
+@keyframes shieldFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 120, 0);
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 18px 12px rgba(255, 255, 150, 0.9);
+    transform: scale(1.08);
+  }
+  50% {
+    box-shadow: 0 0 28px 18px rgba(255, 255, 255, 0.95);
+    transform: scale(1.12);
+  }
+  80% {
+    box-shadow: 0 0 14px 8px rgba(255, 255, 160, 0.6);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 120, 0);
+    transform: scale(1);
+  }
+}
+
+#fantasy-gameboard .square.divine-upgrade {
+  position: relative;
+  z-index: 2;
+  border-radius: 8px;
+  animation: upgradePulse 1.0s ease-out forwards;
+  box-shadow: none;
+}
+
+@keyframes upgradePulse {
+  0% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow:
+      0 0 20px 8px rgba(180, 230, 255, 0.9),
+      0 0 40px 16px rgba(150, 210, 255, 0.7);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+
+/* FOR KOI */
+#fantasy-gameboard .square.water-strike {
+  position: relative;
+  z-index: 3;
+  animation: pulse-water 0.5s ease-in-out;
+  box-shadow: 0 0 12px 6px rgba(0, 255, 255, 0.6);
+  outline: 5px solid rgba(0, 200, 255, 0.8);
+  transform: scale(1.05);
+}
+
+@keyframes pulse-water {
+  0% {
+    outline-color: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    outline-color: rgba(0, 255, 255, 1);
+    box-shadow: 0 0 20px 10px rgba(0, 255, 255, 0.9);
+    transform: scale(1.15);
+  }
+  100% {
+    outline-color: transparent;
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0);
+    transform: scale(1);
+  }
+}
+
+/* FOR WHALE */
+.splash-zone {
+  animation: splashWave 0.4s ease-out;
+  background: radial-gradient(circle, #00cfff 0%, #006b8f 70%, transparent 100%) !important;
+  box-shadow: 0 0 20px 10px rgba(0, 191, 255, 0.6);
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes splashWave {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+    filter: brightness(2);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: brightness(3);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* FOR STAFFSNAKE + ALL EVOLUTION RELATED STYLING */
+.fantasy-piece.evolution-flare {
+  animation: evolveFlash 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 0 15px 8px rgba(0, 255, 180, 0.6),
+    0 0 40px 16px rgba(0, 255, 255, 0.3),
+    inset 0 0 12px 6px rgba(200, 255, 255, 0.4);
+  transform: scale(1.2);
+  z-index: 10;
+  border-radius: 12px;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+@keyframes evolveFlash {
+  0% {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.1;
+    box-shadow:
+      0 0 0px 0 rgba(0, 255, 180, 0),
+      0 0 0px 0 rgba(0, 255, 255, 0),
+      inset 0 0 0px 0 rgba(200, 255, 255, 0);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.4) rotate(6deg);
+    opacity: 1;
+    box-shadow:
+      0 0 25px 14px rgba(0, 255, 180, 0.8),
+      0 0 60px 30px rgba(0, 255, 255, 0.4),
+      inset 0 0 20px 8px rgba(255, 255, 255, 0.4);
+    filter: hue-rotate(15deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    box-shadow:
+      0 0 6px 2px rgba(0, 255, 180, 0.4),
+      0 0 20px 8px rgba(0, 255, 255, 0.2),
+      inset 0 0 8px 4px rgba(255, 255, 255, 0.2);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* FOR KRAKEN */
+.fantasy-piece.devolve-flare {
+  animation: devolveFade 0.7s ease-out;
+  box-shadow:
+    0 0 12px 6px rgba(180, 0, 0, 0.5),
+    inset 0 0 14px 6px rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  z-index: 10;
+}
+
+@keyframes devolveFade {
+  0% {
+    transform: scale(1.4) rotate(0deg);
+    opacity: 0.2;
+    box-shadow:
+      0 0 30px 15px rgba(255, 0, 0, 0.5),
+      inset 0 0 0px 0 rgba(0, 0, 0, 0);
+    filter: hue-rotate(0deg) brightness(1.3);
+  }
+  40% {
+    transform: scale(0.85) rotate(6deg);
+    opacity: 1;
+    box-shadow:
+      0 0 20px 10px rgba(100, 0, 0, 0.7),
+      inset 0 0 20px 10px rgba(0, 0, 0, 0.9);
+    filter: hue-rotate(-20deg) brightness(0.8);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    box-shadow:
+      0 0 6px 3px rgba(80, 0, 0, 0.5),
+      inset 0 0 10px 4px rgba(0, 0, 0, 0.8);
+    filter: brightness(0.9);
+  }
+}
+
+/* FOR TORNADO */
+.fantasy-piece.tornado-fling {
+  animation: tornadoSpin 1.5s ease-in-out;
+}
+
+@keyframes tornadoSpin {
+  0% { transform: rotate(0deg) scale(1); opacity: 1; }
+  50% { transform: rotate(720deg) scale(1.3); opacity: 0.7; }
+  100% { transform: rotate(1080deg) scale(1); opacity: 1; }
+}
+
+#fantasy-gameboard .square.tornado-zone {
+  position: relative;
+  overflow: visible;
+  background: radial-gradient(circle, rgba(210, 240, 255, 0.15) 30%, transparent 70%);
+  z-index: 2;
+}
+
+#fantasy-gameboard .square.tornado-zone::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  height: 160%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(180, 220, 255, 0.12) 0%, transparent 80%);
+  background-image: repeating-conic-gradient(
+    rgba(170, 210, 255, 0.15) 0deg 15deg,
+    transparent 15deg 30deg
+  );
+  border-radius: 50%;
+  animation: spiralSpin 1.5s linear forwards;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.75;
+  mix-blend-mode: lighten;
+}
+
+@keyframes spiralSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* FOR THUNDER */
+#fantasy-gameboard .square.lightning-strike {
+  position: relative;
+  z-index: 2;
+  animation: lightningFlash 0.5s ease;
+  box-shadow: 0 0 20px 10px rgba(255, 255, 100, 0.8);
+  background-color: rgba(255, 255, 150, 0.3);
+  overflow: visible;
+}
+
+#fantasy-gameboard .square.lightning-strike::after {
+  content: '⚡';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.6);
+  font-size: 28px;
+  color: rgba(255, 255, 100, 0.9);
+  text-shadow:
+    0 0 10px rgba(255, 255, 150, 0.9),
+    0 0 20px rgba(255, 255, 255, 0.8);
+  animation: boltFlash 0.5s ease forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes lightningFlash {
+  0%   { background-color: rgba(255, 255, 200, 0.5); }
+  50%  { background-color: rgba(255, 255, 255, 0.9); }
+  100% { background-color: transparent; }
+}
+
+@keyframes boltFlash {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+
+#fantasy-gameboard .square.eye-of-storm {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  background: radial-gradient(circle at center,
+    rgba(220, 240, 255, 0.2),
+    transparent 80%
+  );
+  box-shadow:
+    inset 0 0 10px 2px rgba(255, 255, 255, 0.2),
+    0 0 14px 4px rgba(160, 210, 255, 0.25);
+}
+
+/* FOR VIKING */
+#fantasy-gameboard .square.frost-smash {
+  animation: frostExplosion 0.5s ease-out forwards;
+  background: radial-gradient(circle at center, rgba(210, 240, 255, 0.7), rgba(120, 180, 255, 0.3), transparent 80%);
+  box-shadow:
+    0 0 20px 8px rgba(150, 220, 255, 0.9),
+    0 0 40px 16px rgba(180, 240, 255, 0.6),
+    inset 0 0 15px rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 5;
+  filter: blur(0.2px) saturate(1.2);
+}
+
+@keyframes frostExplosion {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 3px #e0f7ff);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 12px #b5ebff) blur(1px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+    filter: drop-shadow(0 0 5px #aeeeff);
+  }
+}
+
+/* FOR MACE */
+#fantasy-gameboard .square.mace-hit {
+  position: relative;
+  z-index: 3;
+  animation: mace-glow-fade 1s ease-out;
+}
+
+#fantasy-gameboard .square.mace-hit::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 100, 0.7) 0%, rgba(255, 100, 0, 0.2) 80%);
+  pointer-events: none;
+  animation: mace-explosion 0.5s ease-out;
+  z-index: 4;
+}
+
+@keyframes mace-glow-fade {
+  0%   { box-shadow: 0 0 30px 20px rgba(255, 215, 0, 0.9); }
+  50%  { box-shadow: 0 0 50px 25px rgba(255, 100, 0, 0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+@keyframes mace-explosion {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* FOR WITCH */
+#fantasy-gameboard .square.witch-highlight {
+  outline: 3px dashed violet;
+  animation: pulse-glow 1.2s infinite;
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .square.witch-highlight-destination {
+  outline: 3px dashed gold;
+  animation: pulse-glow 1.2s infinite;
+  position: relative;
+  z-index: 9;
+}
+
+#fantasy-gameboard .square.hexshift-flash {
+  animation: magic-flare 0.5s ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(200, 0, 255, 0.5); }
+  50% { box-shadow: 0 0 12px 4px rgba(255, 0, 255, 0.8); }
+}
+
+@keyframes magic-flare {
+  0% { transform: scale(1); background-color: rgba(255, 200, 255, 0.4); }
+  50% { transform: scale(1.08); background-color: rgba(255, 100, 255, 0.5); }
+  100% { transform: scale(1); background-color: transparent; }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ULTIMATE CSS */
+
+/* REAPER KILLING ANIMATION */
+#fantasy-gameboard .square.reaper-strike {
+  position: relative;
+  animation: reaper-fade 0.5s forwards ease-out;
+  box-shadow:
+    0 0 10px 4px rgba(80, 0, 0, 0.6),
+    0 0 20px 8px rgba(0, 0, 0, 0.9),
+    inset 0 0 12px 6px rgba(50, 0, 0, 0.7);
+  background: radial-gradient(circle at center, rgba(30, 0, 0, 0.8), rgba(0, 0, 0, 0.95));
+  border-radius: 6px;
+  z-index: 10;
+  transition: filter 0.3s, transform 0.3s;
+}
+
+@keyframes reaper-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) contrast(1);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    filter: brightness(0.6) contrast(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-15deg);
+    filter: brightness(0.3) contrast(2);
+  }
+}
+
+/* ALIEN BEAM */
+#fantasy-gameboard .square.alien-beam {
+  animation: alienBeam 0.6s ease-in-out infinite alternate;
+  box-shadow: 
+    0 0 20px 6px rgba(0, 255, 170, 0.8),
+    0 0 40px 16px rgba(180, 0, 255, 0.7),
+    0 0 60px 24px rgba(0, 255, 170, 0.4),
+    inset 0 0 10px rgba(0, 255, 170, 0.9);
+  background: radial-gradient(circle at center, rgba(60, 255, 200, 0.4), rgba(30, 0, 60, 0.2));
+  position: relative;
+  z-index: 3;
+  backdrop-filter: blur(2px);
+}
+
+@keyframes alienBeam {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: hue-rotate(0deg) brightness(1.2) contrast(1);
+  }
+  25% {
+    transform: scale(1.15) rotate(1deg);
+    opacity: 1;
+    filter: hue-rotate(90deg) brightness(1.8) contrast(1.2);
+  }
+  50% {
+    transform: scale(1.25) rotate(-1deg);
+    opacity: 0.9;
+    filter: hue-rotate(180deg) brightness(2.5) contrast(1.5);
+  }
+  75% {
+    transform: scale(1.15) rotate(1deg);
+    opacity: 1;
+    filter: hue-rotate(270deg) brightness(1.8) contrast(1.2);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.8;
+    filter: hue-rotate(360deg) brightness(1.2) contrast(1);
+  }
+}
+
+#fantasy-gameboard .square.alien-beam::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(rgba(0, 255, 170, 0.5), transparent);
+  animation: pulseRing 1.2s infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* CHAOS VOID */
+#fantasy-gameboard .square.void-chaos {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.7); 
+  animation: voidPulse 1.2s ease-in-out forwards;
+  z-index: 99;
+  transition: background-color 1.2s ease;
+  border-radius: 8px;
+}
+
+@keyframes voidPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px 2px rgba(50, 0, 70, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(100, 0, 150, 0.8);
+  }
+}
+
+
+
+
+
+/* TURN BASED EFFECTS */
+#fantasy-gameboard .square.magic-spawned {
+  animation: magicAppear 0.6s ease-out;
+}
+
+@keyframes magicAppear {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* LANDSLIDE */
+#fantasy-gameboard .square.landslide-effect {
+  animation: landslideFlash 2.8s ease-in-out;
+}
+
+@keyframes landslideFlash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(160, 100, 60, 0.3); }
+}
+
+.fantasy-piece.shift-from-right {
+  animation: slideFromRight 0.3s ease forwards;
+}
+
+.fantasy-piece.shift-from-left {
+  animation: slideFromLeft 0.3s ease forwards;
+}
+
+@keyframes slideFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideFromLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* RAINSTORM */
+#fantasy-gameboard.rain-effect::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 8px;
+  z-index: 999;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(180, 210, 255, 0.15) 0,
+      rgba(180, 210, 255, 0.15) 2px,
+      rgba(180, 210, 255, 0) 4px,
+      rgba(180, 210, 255, 0) 6px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(160, 190, 230, 0.1) 0,
+      rgba(160, 190, 230, 0.1) 1.5px,
+      rgba(160, 190, 230, 0) 3px,
+      rgba(160, 190, 230, 0) 5px
+    );
+  background-size:
+    20px 20px,
+    10px 10px;
+  animation:
+    rainFallSlow 4s linear infinite,
+    rainFallFast 2s linear infinite;
+}
+
+@keyframes rainFallSlow {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 40px 40px, 0 0; }
+}
+
+@keyframes rainFallFast {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 20px 20px, 0 0; }
+}
+
+/* EVOLUTION GEM */
+.evolution-gem {
+  position: relative;
+  color: #00ccff;
+  filter: drop-shadow(0 0 6px cyan);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.evolution-gem:hover {
+  transform: scale(1.3);
+  filter: drop-shadow(0 0 12px cyan);
+}
+
+/* FATE STORM */
+.fantasy-piece.fate-storm-hit {
+  animation: fateStormHit 0.6s ease-in-out;
+  z-index: 3;
+}
+
+.fantasy-piece.fate-storm-glow {
+  animation: fateStormHit 0.8s ease-in-out;
+  z-index: 3;
+}
+
+@keyframes fateStormHit {
+  0% {
+    transform: scale(1);
+    filter: brightness(1.4) hue-rotate(120deg);
+    box-shadow: 0 0 8px 4px rgba(255, 0, 120, 0.5);
+  }
+  50% {
+    transform: scale(1.3);
+    filter: brightness(0.6) hue-rotate(240deg);
+    box-shadow: 0 0 24px 12px rgba(120, 0, 255, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow: 0 0 6px 3px rgba(80, 0, 150, 0.4);
+  }
+}
+

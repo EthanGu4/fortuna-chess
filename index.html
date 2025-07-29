@@ -6,18 +6,40 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+    <div class="stars"></div>
+    <div class="shooting-stars"></div>
+
+    <div id="mode-selection">
+        <h2>Select Game Mode</h2>
+        <button class="mode-btn" data-set="classic">Classic Mode</button>
+        <button class="mode-btn" data-set="fantasy">Fortuna Mode</button>
+    </div>
+
+    <div id="container"> 
+        <div id="top-wrapper"> 
+            <div id="game-wrapper">
+                <div id="classic-gameboard"></div>
+                <div id="fantasy-gameboard"></div>
+            </div>
+
+            <div id="selected-piece-info-modal">
+                <h2>Selected Piece</h2>
+                <p><strong>Name:</strong> <span id="piece-name">None</span></p>
+                <p><strong>Color:</strong> <span id="piece-color">-</span></p>
+                <p><strong>Evolved:</strong> <span id="piece-evolved">-</span></p>
+            </div>
+        </div>
     
-    <div id="container">
-
-        <div id="gameboard"></div>
-        <p>It is <span id="player"></span>'s turn</p>
-        <p id="info-display"></p>
-        <button id="restart-btn">Restart Game</button>
-
+        <div id="bottom-wrapper">
+            <p id="player-display">It is <span id="player"></span>'s turn</p>
+            <p id="info-display"></p>
+            <button id="restart-btn">Restart Game</button>
+        </div>
     </div>
 
     <audio id="background-music" loop>
-        <source src="audio/babybluemovie.mp3" type="audio/mpeg">
+        <source src="audio/uprising.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
